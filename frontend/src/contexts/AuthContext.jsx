@@ -1,66 +1,88 @@
-// src/contexts/AuthContext.jsx
-import { createContext, useState, useEffect, useContext } from 'react';
-import { login, register, logout, getCurrentUser, isTokenValid } from '../services/authService';
+import { createContext, useState, useContext, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import * as authService from '../services/authService';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = () => {
-      if (isTokenValid()) {
-        setCurrentUser(getCurrentUser());
-      }
+    const initializeAuth = () => {
+      const user = authService.getCurrentUser();
+      setCurrentUser(user);
       setLoading(false);
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
-  const loginUser = async (email, password) => {
+  const login = async (email, password) => {
+    setAuthLoading(true);
     try {
-      setError(null);
-      const data = await login({ email, password });
-      setCurrentUser(data.user);
+      const data = await authService.login({ email, password });
+      setCurrentUser(data);
+      toast.success('Login successful');
+      setAuthLoading(false);
       return data;
     } catch (error) {
-      setError(error.response?.data?.message || 'Login failed. Please try again.');
+      setAuthLoading(false);
+      const message = error.response?.data?.message || 'Login failed';
+      toast.error(message);
       throw error;
     }
   };
 
-  const registerUser = async (userData) => {
+  const register = async (userData) => {
+    setAuthLoading(true);
     try {
-      setError(null);
-      const data = await register(userData);
-      setCurrentUser(data.user);
+      const data = await authService.register(userData);
+      setCurrentUser(data);
+      toast.success('Registration successful');
+      setAuthLoading(false);
       return data;
     } catch (error) {
-      setError(error.response?.data?.message || 'Registration failed. Please try again.');
+      setAuthLoading(false);
+      const message = error.response?.data?.message || 'Registration failed';
+      toast.error(message);
       throw error;
     }
   };
 
-  const logoutUser = () => {
-    logout();
+  const logout = () => {
+    authService.logout();
     setCurrentUser(null);
+    toast.info('You have been logged out');
+  };
+
+  const updateProfile = async (userData) => {
+    setAuthLoading(true);
+    try {
+      const data = await authService.updateProfile(userData);
+      setCurrentUser(data);
+      toast.success('Profile updated successfully');
+      setAuthLoading(false);
+      return data;
+    } catch (error) {
+      setAuthLoading(false);
+      const message = error.response?.data?.message || 'Failed to update profile';
+      toast.error(message);
+      throw error;
+    }
   };
 
   const value = {
     currentUser,
+    login,
+    register,
+    logout,
+    updateProfile,
     loading,
-    error,
-    login: loginUser,
-    register: registerUser,
-    logout: logoutUser
+    authLoading
   };
 
   return (

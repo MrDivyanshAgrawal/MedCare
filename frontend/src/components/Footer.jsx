@@ -45,9 +45,6 @@ const Footer = () => {
                 <Link to="/doctors" className="text-gray-400 hover:text-blue-500 transition-colors duration-300">Our Doctors</Link>
               </li>
               <li>
-                <Link to="/appointments" className="text-gray-400 hover:text-blue-500 transition-colors duration-300">Appointments</Link>
-              </li>
-              <li>
                 <Link to="/contact" className="text-gray-400 hover:text-blue-500 transition-colors duration-300">Contact Us</Link>
               </li>
             </ul>
@@ -91,7 +88,6 @@ const Footer = () => {
           <div className="mt-2 flex justify-center space-x-4 text-sm">
             <Link to="/privacy" className="hover:text-blue-500 transition-colors duration-300">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-blue-500 transition-colors duration-300">Terms of Service</Link>
-            <Link to="/sitemap" className="hover:text-blue-500 transition-colors duration-300">Sitemap</Link>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSignOutAlt, FaHospital, FaBars, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { FaUserCircle, FaSignOutAlt, FaHospital, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
   const { currentUser, logout } = useAuth();
@@ -13,17 +13,17 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // Define dashboard link based on user role
+  // Get dashboard link based on user role
   const getDashboardLink = () => {
     if (!currentUser) return '/';
     
     switch (currentUser.role) {
       case 'patient':
-        return '/patient-dashboard';
+        return '/patient/dashboard';
       case 'doctor':
-        return '/doctor-dashboard';
+        return '/doctor/dashboard';
       case 'admin':
-        return '/admin-dashboard';
+        return '/admin/dashboard';
       default:
         return '/';
     }
@@ -42,21 +42,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-gray-100 focus:outline-none"
-            >
-              {isMenuOpen ? (
-                <FaTimes className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <FaBars className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          {/* Desktop menu */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
               Home
@@ -100,10 +86,24 @@ const Navbar = () => {
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-gray-100"
+            >
+              {isMenuOpen ? (
+                <FaTimes className="block h-6 w-6" />
+              ) : (
+                <FaBars className="block h-6 w-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white shadow-lg rounded-b-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

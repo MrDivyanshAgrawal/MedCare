@@ -5,22 +5,20 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { currentUser } = useAuth();
   const location = useLocation();
 
-  // Check if user is logged in
   if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if role is allowed
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser.role)) {
-    // Redirect to the appropriate dashboard based on role
-    if (currentUser.role === 'patient') {
-      return <Navigate to="/patient-dashboard" replace />;
-    } else if (currentUser.role === 'doctor') {
-      return <Navigate to="/doctor-dashboard" replace />;
-    } else if (currentUser.role === 'admin') {
-      return <Navigate to="/admin-dashboard" replace />;
-    }
-    return <Navigate to="/" replace />;
+    // Redirect to appropriate dashboard based on user role
+    const dashboardPaths = {
+      patient: '/patient/dashboard',
+      doctor: '/doctor/dashboard',
+      admin: '/admin/dashboard'
+    };
+
+    const redirectPath = dashboardPaths[currentUser.role] || '/';
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <Outlet />;

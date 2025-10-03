@@ -1,21 +1,20 @@
-// src/services/authService.js
+import * as jwtDecode from 'jwt-decode';
 import api from './api';
-import * as jwtDecode from 'jwt-decode'; // Import all as jwtDecode
 
 export const register = async (userData) => {
-  const response = await api.post('/auth/register', userData);
+  const response = await api.post('/users/register', userData);
   if (response.data.token) {
     localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+    localStorage.setItem('user', JSON.stringify(response.data));
   }
   return response.data;
 };
 
 export const login = async (credentials) => {
-  const response = await api.post('/auth/login', credentials);
+  const response = await api.post('/users/login', credentials);
   if (response.data.token) {
     localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+    localStorage.setItem('user', JSON.stringify(response.data));
   }
   return response.data;
 };
@@ -37,10 +36,9 @@ export const isTokenValid = () => {
   if (!token) return false;
   
   try {
-    const decoded = jwtDecode.decode(token); // Use decode function from the imported module
+    const decoded = jwtDecode.decode(token);
     const currentTime = Date.now() / 1000;
     
-    // Check if token is expired
     if (decoded.exp < currentTime) {
       logout();
       return false;
@@ -51,4 +49,13 @@ export const isTokenValid = () => {
     logout();
     return false;
   }
+};
+
+export const updateProfile = async (userData) => {
+  const response = await api.put('/users/profile', userData);
+  if (response.data.token) {
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data));
+  }
+  return response.data;
 };
