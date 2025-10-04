@@ -7,6 +7,11 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from "path";
+import { fileURLToPath } from 'url';
+
+// Set up __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -25,26 +30,33 @@ import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const __dirname = path.resolve();
 
+// Development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.use(helmet());
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+}));
+
+// CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100 
 });
-
 app.use('/api', limiter);
 
 // Simple test route
@@ -52,6 +64,7 @@ app.get('/', (req, res) => {
     res.send('Hospital Management API is running');
 });
 
+// API Routes
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
@@ -65,11 +78,24 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Serve static files in production
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  // Calculate the correct path to frontend build
+  const frontendBuildPath = path.resolve(__dirname, '../../frontend/dist');
+  
+  console.log(`Serving static files from: ${frontendBuildPath}`);
+  
+  // Serve static files
+  app.use(express.static(frontendBuildPath));
 
+  // Only handle /:path routes with the frontend app
   app.get("/:path", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+  
+  // Also handle the root route for the frontend
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
   });
 }
 
@@ -116,12 +142,11 @@ app.use((err, req, res, next) => {
 });
 
 // Define port and start server
-app.listen(PORT, () =>{
-    console.log(`Server is running on http://localhost:${PORT}`);
-    if (process.env.NODE_ENV === "production") {
-        const staticPath = path.join(__dirname, "frontend/dist");
-        console.log(`Serving static files from: ${staticPath}`);
-      }
-    connectDB();
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+  if (process.env.NODE_ENV === "production") {
+    const frontendBuildPath = path.resolve(__dirname, '../../frontend/dist');
+    console.log(`Serving static files from: ${frontendBuildPath}`);
+  }
+  connectDB();
 });
-
