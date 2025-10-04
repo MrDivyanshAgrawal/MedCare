@@ -20,6 +20,7 @@
     "axios": "^1.12.2",
     "chart.js": "^4.5.0",
     "dayjs": "^1.11.18",
+    "hospital-management-system": "file:..",
     "jwt-decode": "^4.0.0",
     "postcss": "^8.5.6",
     "react": "^19.1.1",
