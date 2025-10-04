@@ -1,20 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   FaCalendarCheck, 
   FaUserMd, 
   FaMedkit, 
   FaFileMedical,
   FaHeartbeat,
-  FaStar
+  FaStar,
+  FaChartLine,
+  FaClock,
+  FaBell,
+  FaArrowRight,
+  FaUser,
+  FaCog,
+  FaSignOutAlt
 } from 'react-icons/fa';
 
 const Home = () => {
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [topDoctors, setTopDoctors] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState({
+    appointments: 0,
+    medicalRecords: 0,
+    prescriptions: 0,
+    upcomingAppointments: []
+  });
   
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +42,16 @@ const Home = () => {
         
         setTopDoctors(doctorsResponse.data);
         setServices(servicesResponse.data);
+        
+        // Fetch dashboard data if user is logged in
+        if (currentUser) {
+          try {
+            const dashboardResponse = await api.get('/dashboard');
+            setDashboardStats(dashboardResponse.data);
+          } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+          }
+        }
       } catch (error) {
         console.error('Error fetching home data:', error);
       } finally {
@@ -34,30 +60,30 @@ const Home = () => {
     };
     
     fetchData();
-  }, []);
+  }, [currentUser]);
   
-  // Sample testimonials
+  // Indian testimonials
   const testimonials = [
     {
       id: 1,
-      content: "The online appointment system made it so easy to schedule my visit. The doctor was professional and thorough. Highly recommend!",
-      name: "Sarah Johnson",
+      content: "The online appointment system made scheduling my visit very easy. The doctors were professional and thorough. Highly recommended!",
+      name: "Ravi Kumar",
       title: "Patient",
-      image: "https://randomuser.me/api/portraits/women/12.jpg"
+      image: "https://randomuser.me/api/portraits/men/12.jpg"
     },
     {
       id: 2,
-      content: "I was able to access my medical records instantly and share them with my specialist. This hospital's digital system is revolutionizing healthcare.",
-      name: "Michael Chen",
+      content: "I was able to access my medical records instantly and share them with my specialist. The digital system of this hospital is revolutionizing healthcare.",
+      name: "Priya Sharma",
       title: "Patient",
-      image: "https://randomuser.me/api/portraits/men/22.jpg"
+      image: "https://randomuser.me/api/portraits/women/22.jpg"
     },
     {
       id: 3,
-      content: "From booking to consultation to follow-up, everything was seamless. The staff is caring and the facilities are state-of-the-art.",
-      name: "Emily Rodriguez",
+      content: "From booking to consultation and follow-up, everything was seamless. The staff is caring and the facilities are state-of-the-art.",
+      name: "Amit Patel",
       title: "Patient",
-      image: "https://randomuser.me/api/portraits/women/33.jpg"
+      image: "https://randomuser.me/api/portraits/men/33.jpg"
     }
   ];
   
@@ -67,54 +93,140 @@ const Home = () => {
       <div className="relative bg-blue-600">
         <div className="absolute inset-0">
           <img 
-            className="w-full h-full object-cover mix-blend-multiply filter brightness-50"
+            className="w-full h-full object-cover mix-blend-multiply filter brightness-50" 
             src="https://images.unsplash.com/photo-1504813184591-01572f98c85f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1950&q=80" 
             alt="Hospital Building" 
           />
         </div>
-        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Advanced Healthcare at Your Fingertips
-          </h1>
-          <p className="mt-6 text-xl text-blue-100 max-w-3xl">
-            Experience modern healthcare with our integrated digital health records system. Book appointments, access your medical history, and connect with top specialists - all in one place.
-          </p>
-          <div className="mt-10 max-w-sm sm:flex sm:max-w-none">
-            <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
-              <Link
-                to="/register"
-                className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 sm:px-8"
-              >
-                Register Now
-              </Link>
-              <Link
-                to="/doctors"
-                className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-500 bg-opacity-60 hover:bg-opacity-70 sm:px-8"
-              >
-                Find a Doctor
-              </Link>
+        <div className="relative max-w-7xl mx-auto py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+          {currentUser ? (
+            // Logged in user content
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+                Welcome back, {currentUser.name}!
+              </h1>
+              <p className="mt-4 text-lg sm:text-xl text-blue-100 max-w-3xl mx-auto">
+                Manage your health with our comprehensive digital healthcare platform.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to={`/${currentUser.role}/dashboard`}
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 transition-colors"
+                >
+                  <FaChartLine className="mr-2 h-5 w-5" />
+                  Go to Dashboard
+                </Link>
+                <Link
+                  to="/doctors"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-500 bg-opacity-60 hover:bg-opacity-70 transition-colors"
+                >
+                  <FaUserMd className="mr-2 h-5 w-5" />
+                  Find Doctors
+                </Link>
+              </div>
+            </div>
+          ) : (
+            // Guest user content
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+                Modern Healthcare Services at Your Doorstep
+              </h1>
+              <p className="mt-4 text-lg sm:text-xl text-blue-100 max-w-3xl mx-auto">
+                Experience world-class healthcare with our integrated digital health records system. Book appointments with top Indian doctors, access your medical history, and connect with specialists across India - all in one place.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/register"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 transition-colors"
+                >
+                  Register Now
+                </Link>
+                <Link
+                  to="/doctors"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-500 bg-opacity-60 hover:bg-opacity-70 transition-colors"
+                >
+                  Find Doctors
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Dashboard Quick Stats for Logged-in Users */}
+      {currentUser && (
+        <div className="bg-gray-50 py-8 sm:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaCalendarCheck className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Appointments</p>
+                    <p className="text-2xl font-semibold text-gray-900">{dashboardStats.appointments}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaFileMedical className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Medical Records</p>
+                    <p className="text-2xl font-semibold text-gray-900">{dashboardStats.medicalRecords}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaMedkit className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Prescriptions</p>
+                    <p className="text-2xl font-semibold text-gray-900">{dashboardStats.prescriptions}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaClock className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Upcoming</p>
+                    <p className="text-2xl font-semibold text-gray-900">{dashboardStats.upcomingAppointments.length}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       
       {/* Features Section */}
-      <div className="py-12 bg-white">
+      <div className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
+          <div className="text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
               Features
             </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Digital Healthcare Made Simple
+            <p className="mt-2 text-2xl sm:text-3xl lg:text-4xl leading-8 font-extrabold tracking-tight text-gray-900">
+              Simple and Convenient Digital Healthcare Services
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Our integrated health management system brings together everything you need for a seamless healthcare experience.
+            <p className="mt-4 max-w-2xl text-lg sm:text-xl text-gray-500 mx-auto">
+              Our integrated healthcare management system provides you with a seamless healthcare experience.
             </p>
           </div>
 
-          <div className="mt-10">
-            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+          <div className="mt-10 sm:mt-16">
+            <dl className="space-y-8 sm:space-y-10 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-x-8 md:gap-y-10">
               <div className="relative">
                 <dt>
                   <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
@@ -176,22 +288,22 @@ const Home = () => {
       </div>
       
       {/* Top Doctors */}
-      <div className="bg-gray-50 py-12">
+      <div className="bg-gray-50 py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
-              Our Specialists
+              Our Experts
             </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            <p className="mt-2 text-2xl sm:text-3xl lg:text-4xl leading-8 font-extrabold tracking-tight text-gray-900">
               Meet Our Top Doctors
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-              Experienced healthcare professionals dedicated to providing the highest quality of care.
+            <p className="mt-4 max-w-2xl text-lg sm:text-xl text-gray-500 mx-auto">
+              Experienced healthcare professionals dedicated to providing the highest quality care.
             </p>
           </div>
 
-          <div className="mt-10">
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 sm:mt-16">
+            <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {loading ? (
                 [...Array(3)].map((_, index) => (
                   <div key={index} className="bg-white overflow-hidden shadow rounded-lg">
@@ -252,22 +364,22 @@ const Home = () => {
       </div>
       
       {/* Services */}
-      <div className="py-12 bg-white">
+      <div className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
               Services
             </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            <p className="mt-2 text-2xl sm:text-3xl lg:text-4xl leading-8 font-extrabold tracking-tight text-gray-900">
               Comprehensive Healthcare Services
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-              We offer a wide range of medical services to meet all your healthcare needs.
+            <p className="mt-4 max-w-2xl text-lg sm:text-xl text-gray-500 mx-auto">
+              We provide a wide range of medical services to meet all your healthcare needs.
             </p>
           </div>
           
-          <div className="mt-10">
-            <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 sm:mt-16">
+            <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
               <div className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg shadow hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <FaHeartbeat className="h-6 w-6" />
@@ -333,19 +445,19 @@ const Home = () => {
       </div>
       
       {/* Testimonials */}
-      <div className="bg-gray-50 py-12">
+      <div className="bg-gray-50 py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
-              Testimonials
+              Customer Feedback
             </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            <p className="mt-2 text-2xl sm:text-3xl lg:text-4xl leading-8 font-extrabold tracking-tight text-gray-900">
               What Our Patients Say
             </p>
           </div>
           
-          <div className="mt-10">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="mt-10 sm:mt-16">
+            <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((testimonial) => (
                 <div key={testimonial.id} className="bg-white p-6 rounded-lg shadow">
                   <div className="flex items-start">

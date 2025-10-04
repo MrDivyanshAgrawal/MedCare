@@ -10,13 +10,14 @@ const useFormValidation = (initialState, validate, onSubmit) => {
     if (isSubmitting) {
       const noErrors = Object.keys(errors).length === 0;
       if (noErrors) {
+        // call submit once per submission
         onSubmit(values);
         setIsSubmitting(false);
       } else {
         setIsSubmitting(false);
       }
     }
-  }, [errors, isSubmitting, onSubmit, values]);
+  }, [errors, isSubmitting]);
 
   useEffect(() => {
     // Only validate fields that have been touched
@@ -33,7 +34,7 @@ const useFormValidation = (initialState, validate, onSubmit) => {
       
       setErrors(touchedErrors);
     }
-  }, [touched, values, validate]);
+  }, [touched, values]);
 
   const handleChange = (e) => {
     setValues({

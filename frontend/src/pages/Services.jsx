@@ -197,7 +197,7 @@ const Services = () => {
                   <div className="mt-6 flex-grow flex items-end justify-center">
                     <Link
                       to={`/services/${service.id}`}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
                     >
                       Learn More
                     </Link>

@@ -54,7 +54,7 @@ const Register = () => {
     
     if (values.role === 'admin' && !values.adminCode) {
       errors.adminCode = 'Admin code is required';
-    } else if (values.role === 'admin' && values.adminCode !== process.env.REACT_APP_ADMIN_CODE && values.adminCode !== '123456') {
+    } else if (values.role === 'admin' && values.adminCode !== import.meta.env.VITE_ADMIN_CODE && values.adminCode !== '123456') {
       // In a real app, you'd validate this against a secure value from your backend
       errors.adminCode = 'Invalid admin code';
     }

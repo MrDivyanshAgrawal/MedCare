@@ -6,9 +6,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import DoctorsList from './pages/DoctorsList';
 import Services from './pages/Services';
+import ServiceDetail from './pages/ServiceDetail';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -53,8 +55,11 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/doctors" element={<DoctorsList />} />
+          <Route path="/doctors/:id" element={<DoctorProfile />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/services/:id" element={<ServiceDetail />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
 

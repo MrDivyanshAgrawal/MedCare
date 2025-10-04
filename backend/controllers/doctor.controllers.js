@@ -71,14 +71,26 @@ export const createDoctor = asyncHandler(async (req, res) => {
 // @route   GET /api/doctors
 // @access  Public
 export const getDoctors = asyncHandler(async (req, res) => {
-  // Get only approved doctors for public access
   const filter = {};
-  
   if (!req.user || req.user.role !== 'admin') {
     filter.isApproved = true;
   }
-  
-  const doctors = await Doctor.find(filter).populate('user', 'name email phone profilePicture');
+
+  let query = Doctor.find(filter).populate('user', 'name email phone profilePicture');
+
+  // Optional: limit and sort support for homepage
+  const { limit, sort } = req.query;
+  if (sort === 'rating') {
+    query = query.sort({ rating: -1 });
+  }
+  if (limit) {
+    const parsed = parseInt(limit, 10);
+    if (!Number.isNaN(parsed)) {
+      query = query.limit(parsed);
+    }
+  }
+
+  const doctors = await query;
   res.json(doctors);
 });
 

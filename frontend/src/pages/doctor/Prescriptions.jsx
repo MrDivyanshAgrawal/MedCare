@@ -11,7 +11,8 @@ import {
   FaCalendarAlt, 
   FaPills, 
   FaEye,
-  FaPlus
+  FaPlus,
+  FaFilter
 } from 'react-icons/fa';
 
 const Prescriptions = () => {

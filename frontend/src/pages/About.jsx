@@ -19,12 +19,12 @@ const About = () => {
     { year: 2020, title: 'Digital Transformation in Healthcare', organization: 'Health Tech Summit' },
   ];
 
-  // Sample team members
+  // Indian team members
   const teamMembers = [
-    { name: 'Dr. Emily Chen', role: 'Chief Medical Officer', image: 'https://randomuser.me/api/portraits/women/4.jpg' },
-    { name: 'Dr. Robert Williams', role: 'Head of Cardiology', image: 'https://randomuser.me/api/portraits/men/32.jpg' },
-    { name: 'Dr. Sarah Johnson', role: 'Chief of Surgery', image: 'https://randomuser.me/api/portraits/women/68.jpg' },
-    { name: 'Michael Roberts', role: 'Hospital Director', image: 'https://randomuser.me/api/portraits/men/75.jpg' },
+    { name: 'Dr. Priya Sharma', role: 'Chief Medical Officer', image: 'https://randomuser.me/api/portraits/women/4.jpg' },
+    { name: 'Dr. Rajesh Kumar', role: 'Head of Cardiology', image: 'https://randomuser.me/api/portraits/men/32.jpg' },
+    { name: 'Dr. Sunita Reddy', role: 'Chief of Surgery', image: 'https://randomuser.me/api/portraits/women/68.jpg' },
+    { name: 'Amit Patel', role: 'Hospital Director', image: 'https://randomuser.me/api/portraits/men/75.jpg' },
   ];
 
   return (
@@ -38,11 +38,11 @@ const About = () => {
             alt="Hospital Interior" 
           />
         </div>
-        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+        <div className="relative max-w-7xl mx-auto py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-white">
             About Us
           </h1>
-          <p className="mt-6 text-xl text-blue-100 max-w-3xl">
+          <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-blue-100 max-w-3xl">
             Discover our story, our mission, and the people behind our innovative healthcare system.
           </p>
         </div>

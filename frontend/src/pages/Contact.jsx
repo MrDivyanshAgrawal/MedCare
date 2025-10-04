@@ -104,31 +104,31 @@ const Contact = () => {
     }
   };
   
-  // Contact information
+  // Indian contact information
   const contactInfo = [
     {
       icon: <FaMapMarkerAlt className="h-6 w-6 text-blue-500" />,
       title: 'Address',
       details: [
-        '123 Healthcare Avenue',
-        'Medical District',
-        'New York, NY 10001'
+        '123 MG Road, Fort',
+        'Mumbai, Maharashtra 400001',
+        'India'
       ]
     },
     {
       icon: <FaPhone className="h-6 w-6 text-blue-500" />,
       title: 'Phone',
       details: [
-        '+1 (555) 123-4567',
-        '+1 (555) 987-6543'
+        '+91-22-12345678',
+        '+91-9876543210'
       ]
     },
     {
       icon: <FaEnvelope className="h-6 w-6 text-blue-500" />,
       title: 'Email',
       details: [
-        'info@healthrecords.com',
-        'support@healthrecords.com'
+        'info@arogyahospital.com',
+        'support@arogyahospital.com'
       ]
     },
     {
@@ -153,11 +153,11 @@ const Contact = () => {
             alt="Hospital Reception" 
           />
         </div>
-        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+        <div className="relative max-w-7xl mx-auto py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-white">
             Contact Us
           </h1>
-          <p className="mt-6 text-xl text-blue-100 max-w-3xl">
+          <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-blue-100 max-w-3xl">
             We're here to help and answer any questions you might have. We look forward to hearing from you.
           </p>
         </div>
@@ -350,10 +350,10 @@ const Contact = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Emergency? Call Our 24/7 Helpline</h2>
           <a 
-            href="tel:+1-800-123-4567" 
-            className="text-3xl font-bold text-white hover:underline"
+            href="tel:+91-22-12345678" 
+            className="text-2xl sm:text-3xl font-bold text-white hover:underline"
           >
-            +1-800-123-4567
+            +91-22-12345678
           </a>
         </div>
       </div>

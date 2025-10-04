@@ -3,6 +3,7 @@ import asyncHandler from '../middleware/async.middleware.js';
 import { createAuditLog } from '../middleware/auditLog.middleware.js';
 import { cloudinary } from '../utils/cloudinary.utils.js'
 import { sendEmail } from '../utils/sendEmail.utils.js';
+// removed crypto usage; password reset handled via auth controller with JWT
 
 // @desc    Register user
 // @route   POST /api/users/register
@@ -239,3 +240,8 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
   res.json({ message: 'User removed' });
 });
+
+// @desc    Forgot password
+// @route   POST /api/users/forgot-password
+// @access  Public
+// password reset handlers moved to auth controller

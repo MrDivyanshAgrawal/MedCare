@@ -52,7 +52,29 @@ export const isTokenValid = () => {
 };
 
 export const updateProfile = async (userData) => {
-  const response = await api.put('/users/profile', userData);
+  // Check if userData is FormData or regular object
+  let response;
+  
+  if (userData instanceof FormData) {
+    // If FormData, use it directly with multipart/form-data content type
+    response = await api.put('/users/profile', userData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  } else {
+    // If regular object, sanitize and send as JSON
+    const sanitizedData = {
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone,
+      ...(userData.password && { password: userData.password }),
+      ...(userData.profilePicture && { profilePicture: userData.profilePicture })
+    };
+    
+    response = await api.put('/users/profile', sanitizedData);
+  }
+  
   if (response.data.token) {
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('user', JSON.stringify(response.data));
