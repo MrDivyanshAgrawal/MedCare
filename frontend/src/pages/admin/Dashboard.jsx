@@ -3,7 +3,20 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
-import { FaUserInjured, FaUserMd, FaCalendarAlt, FaFileInvoiceDollar, FaChartLine, FaUserShield, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+  FaUserInjured, 
+  FaUserMd, 
+  FaCalendarAlt, 
+  FaFileInvoiceDollar, 
+  FaChartLine, 
+  FaUserShield, 
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+  FaArrowUp,
+  FaArrowDown
+} from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
@@ -32,7 +45,7 @@ const Dashboard = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -42,23 +55,26 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Welcome banner */}
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-indigo-500 to-indigo-700 text-white">
-            <h1 className="text-2xl font-bold">Welcome, {currentUser.name}!</h1>
-            <p className="mt-1 text-indigo-100">
-              Here's an overview of your hospital management system
-            </p>
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white">Welcome back, {currentUser.name}!</h1>
+                <p className="text-indigo-100 text-lg mt-2">
+                  Here's an overview of your hospital management system
+                </p>
+              </div>
+              <div className="hidden lg:block">
+                <FaChartLine className="h-24 w-24 text-indigo-300 opacity-50" />
+              </div>
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -67,51 +83,75 @@ const Dashboard = () => {
         )}
 
         {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-indigo-100 mr-4">
-                <FaUserInjured className="h-6 w-6 text-indigo-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-gradient-to-r from-indigo-100 to-indigo-200 mr-4">
+                  <FaUserInjured className="h-6 w-6 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Patients</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.counts?.patients || 0}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.counts?.patients || 0}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100 mr-4">
-                <FaUserMd className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Doctors</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.counts?.doctors || 0}</p>
+              <div className="text-green-500 text-sm font-medium flex items-center">
+                <FaArrowUp className="mr-1" />
+                12%
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 mr-4">
-                <FaCalendarAlt className="h-6 w-6 text-green-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 mr-4">
+                  <FaUserMd className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Doctors</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.counts?.doctors || 0}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Appointments Today</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.appointments?.today || 0}</p>
+              <div className="text-green-500 text-sm font-medium flex items-center">
+                <FaArrowUp className="mr-1" />
+                8%
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 mr-4">
-                <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-gradient-to-r from-green-100 to-green-200 mr-4">
+                  <FaCalendarAlt className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Appointments Today</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData?.appointments?.today || 0}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${dashboardData?.revenue?.total.toFixed(2) || '0.00'}</p>
+              <div className="text-red-500 text-sm font-medium flex items-center">
+                <FaArrowDown className="mr-1" />
+                3%
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-gradient-to-r from-yellow-100 to-yellow-200 mr-4">
+                  <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900">${dashboardData?.revenue?.total?.toFixed(2) || '0.00'}</p>
+                </div>
+              </div>
+              <div className="text-green-500 text-sm font-medium flex items-center">
+                <FaArrowUp className="mr-1" />
+                18%
               </div>
             </div>
           </div>
@@ -119,39 +159,38 @@ const Dashboard = () => {
 
         {/* Doctor Approvals Alert */}
         {dashboardData?.counts?.pendingDoctorApprovals > 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div className="ml-3">
+              <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
+              <div className="ml-3 flex-1">
                 <p className="text-sm text-yellow-700">
                   You have {dashboardData.counts.pendingDoctorApprovals} doctor{dashboardData.counts.pendingDoctorApprovals > 1 ? 's' : ''} awaiting approval.
                 </p>
-                <div className="mt-2">
-                  <Link
-                    to="/admin/doctors?filter=pending"
-                    className="text-sm font-medium text-yellow-700 hover:text-yellow-600"
-                  >
-                    Review Applications →
-                  </Link>
-                </div>
               </div>
+              <Link
+                to="/admin/doctors?filter=pending"
+                className="ml-4 inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors duration-200"
+              >
+                Review Applications
+              </Link>
             </div>
           </div>
         )}
 
         {/* Revenue Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Revenue Overview</h2>
-            <div className="flex items-center space-x-2">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Revenue Overview</h2>
+              <p className="text-sm text-gray-500 mt-1">Monthly revenue trend</p>
+            </div>
+            <div className="flex items-center space-x-4">
               <div className="flex items-center">
-                <div className="h-3 w-3 bg-blue-500 rounded-full mr-1"></div>
+                <div className="h-3 w-3 bg-blue-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600">Total</span>
               </div>
               <div className="flex items-center">
-                <div className="h-3 w-3 bg-green-500 rounded-full mr-1"></div>
+                <div className="h-3 w-3 bg-green-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600">Collected</span>
               </div>
             </div>
@@ -209,7 +248,7 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip formatter={(value) => `$${value}`} />
                 <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="collected" stroke="#22c55e" strokeWidth={2} />
+                <Line type="monotone" dataKey="collected" stroke="#10b981" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -218,19 +257,19 @@ const Dashboard = () => {
         {/* Recent Registrations and Appointments */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Users */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">Recent Registrations</h2>
-              <Link to="/admin/users" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Registrations</h2>
+              <Link to="/admin/users" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-200">
+                View all →
               </Link>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
               {dashboardData?.recentUsers?.length > 0 ? (
                 dashboardData.recentUsers.map((user) => (
-                  <div key={user._id} className="px-6 py-4 flex items-center">
+                  <div key={user._id} className="px-6 py-4 flex items-center hover:bg-gray-50 transition-colors duration-150">
                     <div className="flex-shrink-0">
-                      <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-100 to-indigo-200 flex items-center justify-center">
                         <FaUserShield className="h-5 w-5 text-indigo-600" />
                       </div>
                     </div>
@@ -244,41 +283,44 @@ const Dashboard = () => {
                           {user.role}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Registered on {new Date(user.createdAt).toLocaleDateString()}
+                      <p className="mt-1 text-xs text-gray-500 flex items-center">
+                        <FaClock className="mr-1 h-3 w-3" />
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="px-6 py-4 text-center text-gray-500">No recent registrations</div>
+                <div className="px-6 py-12 text-center text-gray-500">No recent registrations</div>
               )}
             </div>
           </div>
 
           {/* Recent Appointments */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">Recent Appointments</h2>
-              <Link to="/admin/appointments" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                View all
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Appointments</h2>
+              <Link to="/admin/appointments" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-200">
+                View all →
               </Link>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
               {dashboardData?.recentAppointments?.length > 0 ? (
                 dashboardData.recentAppointments.map((appointment) => (
-                  <div key={appointment._id} className="px-6 py-4 flex items-center">
+                  <div key={appointment._id} className="px-6 py-4 flex items-center hover:bg-gray-50 transition-colors duration-150">
                     <div className="flex-shrink-0">
                       <div className={`p-2 rounded-full ${
-                        appointment.status === 'completed' ? 'bg-green-100' : 
-                        appointment.status === 'cancelled' ? 'bg-red-100' : 
-                        'bg-blue-100'
+                        appointment.status === 'completed' ? 'bg-gradient-to-r from-green-100 to-green-200' : 
+                        appointment.status === 'cancelled' ? 'bg-gradient-to-r from-red-100 to-red-200' : 
+                        'bg-gradient-to-r from-blue-100 to-blue-200'
                       }`}>
-                        <FaCalendarAlt className={`h-5 w-5 ${
-                          appointment.status === 'completed' ? 'text-green-600' : 
-                          appointment.status === 'cancelled' ? 'text-red-600' : 
-                          'text-blue-600'
-                        }`} />
+                        {appointment.status === 'completed' ? (
+                          <FaCheckCircle className="h-5 w-5 text-green-600" />
+                        ) : appointment.status === 'cancelled' ? (
+                          <FaTimesCircle className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <FaCalendarAlt className="h-5 w-5 text-blue-600" />
+                        )}
                       </div>
                     </div>
                     <div className="ml-4 flex-1">
@@ -287,7 +329,8 @@ const Dashboard = () => {
                           <h3 className="text-sm font-medium text-gray-900">
                             {appointment.patient.user.name} with Dr. {appointment.doctor.user.name}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 flex items-center">
+                            <FaClock className="mr-1 h-3 w-3" />
                             {new Date(appointment.date).toLocaleDateString()} at {appointment.timeSlot}
                           </p>
                         </div>
@@ -303,7 +346,7 @@ const Dashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="px-6 py-4 text-center text-gray-500">No recent appointments</div>
+                <div className="px-6 py-12 text-center text-gray-500">No recent appointments</div>
               )}
             </div>
           </div>

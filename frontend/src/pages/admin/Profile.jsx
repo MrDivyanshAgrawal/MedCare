@@ -12,7 +12,11 @@ import {
   FaLock, 
   FaUserShield, 
   FaUserCog,
-  FaCamera
+  FaCamera,
+  FaCheck,
+  FaExclamationTriangle,
+  FaShieldAlt,
+  FaKey
 } from 'react-icons/fa';
 import useFormValidation from '../../hooks/useFormValidation';
 
@@ -82,32 +86,31 @@ const AdminProfile = () => {
   };
 
   // Handle profile form submission
-const handleProfileSubmit = async (values) => {
-  try {
-    // Create FormData object
-    const formData = new FormData();
-    formData.append('name', values.name);
-    formData.append('email', values.email);
-    formData.append('phone', values.phone || '');
-    
-    if (imageFile) {
-      formData.append('profilePicture', imageFile);
+  const handleProfileSubmit = async (values) => {
+    try {
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('email', values.email);
+      formData.append('phone', values.phone || '');
+      
+      if (imageFile) {
+        formData.append('profilePicture', imageFile);
+      }
+      
+      await updateProfile(formData);
+      toast.success('Profile updated successfully');
+      
+      // Reset image file state after successful update
+      setImageFile(null);
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+      throw error;
     }
-    
-    await updateProfile(formData);
-    toast.success('Profile updated successfully');
-    
-    // Reset image file state after successful update
-    setImageFile(null);
-    
-    return true;
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    toast.error('Failed to update profile');
-    throw error;
-  }
-};
-
+  };
 
   // Handle password form submission
   const handlePasswordSubmit = async (values) => {
@@ -178,258 +181,321 @@ const handleProfileSubmit = async (values) => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
-            <h1 className="text-2xl font-bold">Admin Profile</h1>
-            <p className="mt-1 text-purple-100">
-              Manage your account information and settings
-            </p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center">
+              <FaUserShield className="h-10 w-10 text-white mr-4" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Admin Profile</h1>
+                <p className="text-purple-100 text-lg mt-1">
+                  Manage your account information and settings
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="flex border-b border-gray-200">
             <button
-              className={`px-6 py-4 text-sm font-medium ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
                 activeTab === 'profile' 
-                  ? 'text-purple-600 border-b-2 border-purple-500' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
               onClick={() => setActiveTab('profile')}
             >
-              <FaUser className="inline-block mr-2" />
+              <FaUser className="inline-block mr-2 h-4 w-4" />
               Profile Information
             </button>
             <button
-              className={`px-6 py-4 text-sm font-medium ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
                 activeTab === 'password' 
-                  ? 'text-purple-600 border-b-2 border-purple-500' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
               onClick={() => setActiveTab('password')}
             >
-              <FaLock className="inline-block mr-2" />
+              <FaLock className="inline-block mr-2 h-4 w-4" />
               Change Password
             </button>
           </div>
           
-          <div className="p-6">
+          <div className="p-8">
             {activeTab === 'profile' ? (
-              <form onSubmit={profileForm.handleSubmit} className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-center">
-                  <div className="relative w-32 h-32 mb-4 sm:mb-0 sm:mr-6">
-                    <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                      {imagePreview ? (
-                        <img 
-                          src={imagePreview} 
-                          alt="Profile" 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <FaUserCog className="h-16 w-16 text-gray-400" />
-                      )}
+              <form onSubmit={profileForm.handleSubmit} className="space-y-8">
+                {/* Profile Picture and Role Section */}
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+                  {/* Profile Picture */}
+                  <div className="flex-shrink-0">
+                    <div className="relative group">
+                      <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-r from-purple-100 to-purple-200 flex items-center justify-center ring-4 ring-white shadow-xl">
+                        {imagePreview ? (
+                          <img 
+                            src={imagePreview} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <FaUserCog className="h-20 w-20 text-purple-400" />
+                        )}
+                      </div>
+                      <label 
+                        htmlFor="profile-picture" 
+                        className="absolute bottom-2 right-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 rounded-full cursor-pointer hover:from-purple-700 hover:to-purple-800 shadow-lg transform transition-all duration-200 hover:scale-110"
+                      >
+                        <FaCamera className="h-5 w-5" />
+                      </label>
+                      <input
+                        id="profile-picture"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
                     </div>
-                    <label 
-                      htmlFor="profile-picture" 
-                      className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full cursor-pointer hover:bg-purple-700"
-                    >
-                      <FaCamera className="h-4 w-4" />
-                    </label>
-                    <input
-                      id="profile-picture"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
+                    <p className="text-sm text-gray-500 text-center mt-3">Click camera to upload</p>
                   </div>
-                  <div className="flex-1 w-full sm:w-auto">
-                    <div className="border border-gray-300 rounded-md p-4">
-                      <div className="flex items-center text-gray-800">
-                        <FaUserShield className="h-5 w-5 text-purple-600 mr-2" />
-                        <div>
-                          <div className="text-sm font-medium">Role</div>
-                          <div className="text-lg">Administrator</div>
+
+                  {/* Role Badge */}
+                  <div className="flex-1 w-full">
+                    <div className="bg-gradient-to-r from-purple-100 to-purple-200 rounded-xl p-6 shadow-sm">
+                      <div className="flex items-center">
+                        <div className="p-3 bg-white rounded-full shadow-md">
+                          <FaShieldAlt className="h-8 w-8 text-purple-600" />
+                        </div>
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-purple-600">Account Type</p>
+                          <p className="text-2xl font-bold text-purple-800">Administrator</p>
+                          <p className="text-xs text-purple-600 mt-1">Full system access</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Full Name
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaUser className="h-5 w-5 text-gray-400" />
+                {/* Form Fields */}
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        value={profileForm.values.name}
+                        onChange={profileForm.handleChange}
+                        onBlur={profileForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          profileForm.touched.name && profileForm.errors.name 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="John Doe"
+                      />
                     </div>
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      value={profileForm.values.name}
-                      onChange={profileForm.handleChange}
-                      onBlur={profileForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        profileForm.touched.name && profileForm.errors.name ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                    />
+                    {profileForm.touched.name && profileForm.errors.name && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {profileForm.errors.name}
+                      </p>
+                    )}
                   </div>
-                  {profileForm.touched.name && profileForm.errors.name && (
-                    <p className="mt-2 text-sm text-red-600">{profileForm.errors.name}</p>
-                  )}
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={profileForm.values.email}
+                        onChange={profileForm.handleChange}
+                        onBlur={profileForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          profileForm.touched.email && profileForm.errors.email 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="admin@example.com"
+                      />
+                    </div>
+                    {profileForm.touched.email && profileForm.errors.email && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {profileForm.errors.email}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={profileForm.values.phone}
+                        onChange={profileForm.handleChange}
+                        onBlur={profileForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          profileForm.touched.phone && profileForm.errors.phone 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="(123) 456-7890"
+                      />
+                    </div>
+                    {profileForm.touched.phone && profileForm.errors.phone && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {profileForm.errors.phone}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email Address
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaEnvelope className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={profileForm.values.email}
-                      onChange={profileForm.handleChange}
-                      onBlur={profileForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        profileForm.touched.email && profileForm.errors.email ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                    />
-                  </div>
-                  {profileForm.touched.email && profileForm.errors.email && (
-                    <p className="mt-2 text-sm text-red-600">{profileForm.errors.email}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Phone Number (optional)
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaPhone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={profileForm.values.phone}
-                      onChange={profileForm.handleChange}
-                      onBlur={profileForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        profileForm.touched.phone && profileForm.errors.phone ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                      placeholder="(123) 456-7890"
-                    />
-                  </div>
-                  {profileForm.touched.phone && profileForm.errors.phone && (
-                    <p className="mt-2 text-sm text-red-600">{profileForm.errors.phone}</p>
-                  )}
-                </div>
-                
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                   <LoadingButton
                     type="submit"
                     isLoading={profileForm.isSubmitting}
                     disabled={profileForm.isSubmitting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                   >
+                    <FaCheck className="mr-2 h-4 w-4" />
                     Save Changes
                   </LoadingButton>
                 </div>
               </form>
             ) : (
               <form onSubmit={passwordForm.handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                    Current Password
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="h-5 w-5 text-gray-400" />
+                {/* Security Info */}
+                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 mb-8">
+                  <div className="flex items-start">
+                    <div className="p-2 bg-yellow-200 rounded-lg">
+                      <FaKey className="h-5 w-5 text-yellow-700" />
                     </div>
-                    <input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      autoComplete="current-password"
-                      value={passwordForm.values.currentPassword}
-                      onChange={passwordForm.handleChange}
-                      onBlur={passwordForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        passwordForm.touched.currentPassword && passwordForm.errors.currentPassword ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                    />
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-yellow-800">Password Security</h3>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        Ensure your new password is at least 6 characters long and contains a mix of letters, numbers, and symbols.
+                      </p>
+                    </div>
                   </div>
-                  {passwordForm.touched.currentPassword && passwordForm.errors.currentPassword && (
-                    <p className="mt-2 text-sm text-red-600">{passwordForm.errors.currentPassword}</p>
-                  )}
+                </div>
+
+                {/* Password Fields */}
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="currentPassword"
+                        name="currentPassword"
+                        type="password"
+                        autoComplete="current-password"
+                        value={passwordForm.values.currentPassword}
+                        onChange={passwordForm.handleChange}
+                        onBlur={passwordForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          passwordForm.touched.currentPassword && passwordForm.errors.currentPassword 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                    {passwordForm.touched.currentPassword && passwordForm.errors.currentPassword && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {passwordForm.errors.currentPassword}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                      New Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        value={passwordForm.values.newPassword}
+                        onChange={passwordForm.handleChange}
+                        onBlur={passwordForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          passwordForm.touched.newPassword && passwordForm.errors.newPassword 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    {passwordForm.touched.newPassword && passwordForm.errors.newPassword && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {passwordForm.errors.newPassword}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                      Confirm New Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        value={passwordForm.values.confirmPassword}
+                        onChange={passwordForm.handleChange}
+                        onBlur={passwordForm.handleBlur}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                          passwordForm.touched.confirmPassword && passwordForm.errors.confirmPassword 
+                            ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent' 
+                            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        }`}
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    {passwordForm.touched.confirmPassword && passwordForm.errors.confirmPassword && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <FaExclamationTriangle className="mr-1 h-3 w-3" />
+                        {passwordForm.errors.confirmPassword}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                    New Password
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      value={passwordForm.values.newPassword}
-                      onChange={passwordForm.handleChange}
-                      onBlur={passwordForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        passwordForm.touched.newPassword && passwordForm.errors.newPassword ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                    />
-                  </div>
-                  {passwordForm.touched.newPassword && passwordForm.errors.newPassword && (
-                    <p className="mt-2 text-sm text-red-600">{passwordForm.errors.newPassword}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirm New Password
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      value={passwordForm.values.confirmPassword}
-                      onChange={passwordForm.handleChange}
-                      onBlur={passwordForm.handleBlur}
-                      className={`block w-full pl-10 pr-3 py-2 border ${
-                        passwordForm.touched.confirmPassword && passwordForm.errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
-                    />
-                  </div>
-                  {passwordForm.touched.confirmPassword && passwordForm.errors.confirmPassword && (
-                    <p className="mt-2 text-sm text-red-600">{passwordForm.errors.confirmPassword}</p>
-                  )}
-                </div>
-                
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                   <LoadingButton
                     type="submit"
                     isLoading={passwordForm.isSubmitting}
                     disabled={passwordForm.isSubmitting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                   >
+                    <FaKey className="mr-2 h-4 w-4" />
                     Change Password
                   </LoadingButton>
                 </div>

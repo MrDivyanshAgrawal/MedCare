@@ -1,10 +1,21 @@
-// src/pages/patient/Appointments.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { FaCalendarAlt, FaCalendarCheck, FaCalendarTimes, FaUserMd, FaClock, FaNotesMedical, FaAngleRight } from 'react-icons/fa';
+import { 
+  FaCalendarAlt, 
+  FaCalendarCheck, 
+  FaCalendarTimes, 
+  FaUserMd, 
+  FaClock, 
+  FaNotesMedical, 
+  FaAngleRight,
+  FaFilter,
+  FaMapMarkerAlt,
+  FaVideo,
+  FaClinicMedical
+} from 'react-icons/fa';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -71,15 +82,18 @@ const Appointments = () => {
   };
 
   const getStatusBadge = (status) => {
-    const statusClasses = {
-      scheduled: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
-      missed: 'bg-yellow-100 text-yellow-800'
+    const statusConfig = {
+      scheduled: { bg: 'bg-blue-100', text: 'text-blue-800', icon: <FaCalendarCheck className="mr-1 h-3 w-3" /> },
+      completed: { bg: 'bg-green-100', text: 'text-green-800', icon: <FaCheckCircle className="mr-1 h-3 w-3" /> },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-800', icon: <FaCalendarTimes className="mr-1 h-3 w-3" /> },
+      missed: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <FaTimesCircle className="mr-1 h-3 w-3" /> }
     };
     
+    const config = statusConfig[status] || statusConfig.scheduled;
+    
     return (
-      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-3 py-1 inline-flex items-center text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
+        {config.icon}
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -89,7 +103,7 @@ const Appointments = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -98,21 +112,22 @@ const Appointments = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-            <h1 className="text-2xl font-bold">My Appointments</h1>
-            <p className="mt-1 text-blue-100">
-              View and manage your scheduled appointments
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <h1 className="text-3xl font-bold text-white mb-2">My Appointments</h1>
+            <p className="text-blue-100 text-lg">
+              Manage and track all your medical appointments in one place
             </p>
           </div>
         </div>
         
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
@@ -122,173 +137,148 @@ const Appointments = () => {
           </div>
         )}
         
-        <div className="flex justify-between items-center">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'all' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('upcoming')}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'upcoming' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Upcoming
-            </button>
-            <button
-              onClick={() => setFilter('past')}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'past' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Past
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'completed' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Completed
-            </button>
-            <button
-              onClick={() => setFilter('cancelled')}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'cancelled' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Cancelled
-            </button>
+        {/* Filters and Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-md">
+          <div className="flex items-center space-x-2">
+            <FaFilter className="text-gray-400" />
+            <div className="flex flex-wrap gap-2">
+              {['all', 'upcoming', 'past', 'completed', 'cancelled'].map((filterType) => (
+                <button
+                  key={filterType}
+                  onClick={() => setFilter(filterType)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    filter === filterType 
+                      ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
           
           <Link 
             to="/patient/book-appointment" 
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105"
           >
-            <FaCalendarAlt className="mr-2 h-4 w-4" />
+            <FaCalendarAlt className="mr-2 h-5 w-5" />
             Book New Appointment
           </Link>
         </div>
         
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {filteredAppointments().length > 0 ? (
-              filteredAppointments().map((appointment) => {
-                const appointmentDate = new Date(appointment.date);
-                const isUpcoming = appointmentDate >= new Date() && appointment.status === 'scheduled';
-                
-                return (
-                  <li key={appointment._id}>
-                    <div className="px-4 py-5 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <div className={`p-2 rounded-full ${
-                              appointment.status === 'completed' ? 'bg-green-100' : 
-                              appointment.status === 'cancelled' ? 'bg-red-100' : 
-                              'bg-blue-100'
+        {/* Appointments List */}
+        <div className="space-y-4">
+          {filteredAppointments().length > 0 ? (
+            filteredAppointments().map((appointment) => {
+              const appointmentDate = new Date(appointment.date);
+              const isUpcoming = appointmentDate >= new Date() && appointment.status === 'scheduled';
+              
+              return (
+                <div 
+                  key={appointment._id} 
+                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex items-start space-x-4">
+                        {/* Doctor Avatar */}
+                        <div className="flex-shrink-0">
+                          <div className="relative">
+                            <img
+                              src={appointment.doctor.user.profilePicture || `https://ui-avatars.com/api/?name=${appointment.doctor.user.name}&background=0891b2&color=fff`}
+                              alt={appointment.doctor.user.name}
+                              className="h-16 w-16 rounded-full object-cover border-4 border-blue-100"
+                            />
+                            <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-full ${
+                              appointment.status === 'completed' ? 'bg-green-500' : 
+                              appointment.status === 'cancelled' ? 'bg-red-500' : 
+                              'bg-blue-500'
                             }`}>
                               {appointment.status === 'completed' ? (
-                                <FaCalendarCheck className="h-6 w-6 text-green-600" />
+                                <FaCalendarCheck className="h-3 w-3 text-white" />
                               ) : appointment.status === 'cancelled' ? (
-                                <FaCalendarTimes className="h-6 w-6 text-red-600" />
+                                <FaCalendarTimes className="h-3 w-3 text-white" />
                               ) : (
-                                <FaCalendarAlt className="h-6 w-6 text-blue-600" />
+                                <FaCalendarAlt className="h-3 w-3 text-white" />
                               )}
                             </div>
                           </div>
-                          <div className="ml-4">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              Appointment with Dr. {appointment.doctor.user.name}
-                            </h3>
-                            <div className="mt-1 flex items-center text-sm text-gray-500">
-                              <FaClock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                        </div>
+                        
+                        {/* Appointment Details */}
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Dr. {appointment.doctor.user.name}
+                          </h3>
+                          <p className="text-gray-600">{appointment.doctor.specialization}</p>
+                          
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <FaClock className="mr-2 h-4 w-4 text-gray-400" />
                               <span>{appointmentDate.toLocaleDateString()} at {appointment.timeSlot}</span>
-                              <span className="mx-2">•</span>
-                              {getStatusBadge(appointment.status)}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <FaClinicMedical className="mr-2 h-4 w-4 text-gray-400" />
+                              <span>Consultation Fee: ₹{appointment.doctor.consultationFee || '500'}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 flex items-start">
+                            <FaNotesMedical className="mt-0.5 mr-2 h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Reason for visit:</p>
+                              <p className="text-sm text-gray-600">{appointment.reasonForVisit}</p>
                             </div>
                           </div>
                         </div>
-                        <div className="flex space-x-2">
-                          {isUpcoming && (
-                            <button
-                              onClick={() => handleCancelAppointment(appointment._id)}
-                              className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                          <Link
-                            to={`/patient/appointments/${appointment._id}`}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
-                          >
-                            Details <FaAngleRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </div>
                       </div>
-                      <div className="mt-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <FaUserMd className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="ml-3">
-                            <p className="text-sm text-gray-500">
-                              <span className="font-medium text-gray-700">Specialization:</span> {appointment.doctor.specialization}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-2 flex items-start">
-                          <div className="flex-shrink-0">
-                            <FaNotesMedical className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="ml-3">
-                            <p className="text-sm text-gray-500">
-                              <span className="font-medium text-gray-700">Reason for visit:</span> {appointment.reasonForVisit}
-                            </p>
-                          </div>
-                        </div>
+                      
+                      {/* Actions */}
+                      <div className="mt-4 lg:mt-0 flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                        {getStatusBadge(appointment.status)}
+                        
+                        {isUpcoming && (
+                          <button
+                            onClick={() => handleCancelAppointment(appointment._id)}
+                            className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 transition-colors duration-200"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        
+                        <Link
+                          to={`/patient/appointments/${appointment._id}`}
+                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        >
+                          View Details
+                          <FaAngleRight className="ml-1 h-4 w-4" />
+                        </Link>
                       </div>
                     </div>
-                  </li>
-                );
-              })
-            ) : (
-              <li className="px-4 py-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <h3 className="mt-2 text-lg font-medium text-gray-900">No appointments found</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {filter !== 'all' ? 'Try changing your filter or ' : ''}
-                  Get started by booking a new appointment.
-                </p>
-                <div className="mt-6">
-                  <Link
-                    to="/patient/book-appointment"
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <FaCalendarAlt className="-ml-1 mr-2 h-4 w-4" />
-                    Book New Appointment
-                  </Link>
+                  </div>
                 </div>
-              </li>
-            )}
-          </ul>
+              );
+            })
+          ) : (
+            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+              <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                <FaCalendarAlt className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No appointments found</h3>
+              <p className="text-gray-600 mb-6">
+                {filter !== 'all' ? 'Try changing your filter or ' : ''}
+                Get started by booking a new appointment.
+              </p>
+              <Link
+                to="/patient/book-appointment"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+              >
+                <FaCalendarAlt className="mr-2 h-5 w-5" />
+                Book Your First Appointment
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

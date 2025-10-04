@@ -3,9 +3,28 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { FaUser, FaFileMedical, FaPills, FaFlask, FaHeartbeat, FaFileUpload, FaArrowLeft } from 'react-icons/fa';
-import LoadingSpinner, { LoadingButton } from '../../components/LoadingSpinner';
-import useFormValidation from '../../hooks/useFormValidation';
+import { 
+  FaUser, 
+  FaFileMedical, 
+  FaPills, 
+  FaFlask, 
+  FaHeartbeat, 
+  FaFileUpload, 
+  FaArrowLeft,
+  FaNotesMedical,
+  FaPlus,
+  FaTimes,
+  FaCalendarAlt,
+  FaWeight,
+  FaRulerVertical,
+  FaThermometerHalf,
+  FaLungs,
+  FaTint,
+  FaStethoscope,
+  FaVenusMars,
+  FaBirthdayCake,
+  FaPaperclip
+} from 'react-icons/fa';
 
 const CreateMedicalRecord = () => {
   const { appointmentId } = useParams();
@@ -16,8 +35,8 @@ const CreateMedicalRecord = () => {
   const [error, setError] = useState(null);
   const [appointment, setAppointment] = useState(null);
 
-  // Initial form state
-  const initialForm = {
+  // Form state
+  const [form, setForm] = useState({
     diagnosis: '',
     symptoms: [],
     treatment: '',
@@ -35,34 +54,7 @@ const CreateMedicalRecord = () => {
     },
     notes: '',
     attachments: []
-  };
-
-  // Validation function
-  const validateForm = (values) => {
-    const errors = {};
-    
-    if (!values.diagnosis.trim()) {
-      errors.diagnosis = 'Diagnosis is required';
-    }
-    
-    return errors;
-  };
-
-  // Form handling
-  const {
-    values: form,
-    errors,
-    touched,
-    isSubmitting,
-    handleChange: handleFormChange,
-    handleBlur,
-    handleSubmit: handleFormSubmit,
-    setValues: setForm
-  } = useFormValidation(
-    initialForm,
-    validateForm,
-    submitForm
-  );
+  });
 
   // New symptom state
   const [newSymptom, setNewSymptom] = useState('');
@@ -92,7 +84,18 @@ const CreateMedicalRecord = () => {
     }
   };
 
-  // Custom handler for form with nested fields
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -106,7 +109,10 @@ const CreateMedicalRecord = () => {
         }
       });
     } else {
-      handleFormChange(e);
+      setForm({
+        ...form,
+        [name]: value
+      });
     }
   };
 
@@ -304,7 +310,14 @@ const CreateMedicalRecord = () => {
     }
   }, [form.vitalSigns.height, form.vitalSigns.weight]);
 
-  async function submitForm(values) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!form.diagnosis.trim()) {
+      toast.error('Please enter a diagnosis');
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
@@ -312,7 +325,7 @@ const CreateMedicalRecord = () => {
       const medicalRecordData = {
         patientId: appointment.patient._id,
         appointmentId: appointment._id,
-        ...values
+        ...form
       };
       
       // Remove any empty medications
@@ -326,19 +339,21 @@ const CreateMedicalRecord = () => {
       
       toast.success('Medical record created successfully');
       
-      // Navigate back to the appointment page or to the new medical record
+      // Navigate to the new medical record
       navigate(`/doctor/medical-records/${response.data._id}`);
     } catch (err) {
       console.error('Error creating medical record:', err);
       toast.error(err.response?.data?.message || 'Failed to create medical record');
       setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <LoadingSpinner size="large" />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent"></div>
+        </div>
       </DashboardLayout>
     );
   }
@@ -346,13 +361,9 @@ const CreateMedicalRecord = () => {
   if (!appointment) {
     return (
       <DashboardLayout>
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-              </svg>
-            </div>
+            <FaExclamationTriangle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
               <p className="text-sm text-red-700">Appointment not found</p>
               <button 
@@ -371,33 +382,41 @@ const CreateMedicalRecord = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
           >
             <FaArrowLeft className="mr-2 h-4 w-4" />
             Back
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-green-500 to-green-700 text-white">
-            <h1 className="text-2xl font-bold">Create Medical Record</h1>
-            <p className="mt-1 text-green-100">
-              For {appointment.patient.user.name}'s appointment on {new Date(appointment.date).toLocaleDateString()}
-            </p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-600 to-green-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center">
+              <FaFileMedical className="h-10 w-10 text-white mr-4" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Create Medical Record</h1>
+                <p className="text-green-100 text-lg mt-1">
+                  For {appointment.patient.user.name}'s appointment on {new Date(appointment.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -406,52 +425,63 @@ const CreateMedicalRecord = () => {
         )}
 
         {/* Patient information */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Patient Information</h2>
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg mr-3">
+              <FaUser className="h-5 w-5 text-blue-600" />
+            </div>
+            Patient Information
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center">
-              <FaUser className="h-5 w-5 text-gray-400 mr-2" />
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="text-sm font-medium text-gray-900">{appointment.patient.user.name}</p>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center">
+                <FaUser className="h-5 w-5 text-gray-400 mr-2" />
+                <div>
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="text-sm font-medium text-gray-900">{appointment.patient.user.name}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <div>
-                <p className="text-sm text-gray-500">Date of Birth</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {appointment.patient.dateOfBirth ? new Date(appointment.patient.dateOfBirth).toLocaleDateString() : 'Not provided'}
-                </p>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center">
+                <FaBirthdayCake className="h-5 w-5 text-gray-400 mr-2" />
+                <div>
+                  <p className="text-sm text-gray-500">Age</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {appointment.patient.dateOfBirth 
+                      ? `${calculateAge(appointment.patient.dateOfBirth)} years`
+                      : 'Not provided'}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <div>
-                <p className="text-sm text-gray-500">Gender</p>
-                <p className="text-sm font-medium text-gray-900 capitalize">
-                  {appointment.patient.gender || 'Not provided'}
-                </p>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center">
+                <FaVenusMars className="h-5 w-5 text-gray-400 mr-2" />
+                <div>
+                  <p className="text-sm text-gray-500">Gender</p>
+                  <p className="text-sm font-medium text-gray-900 capitalize">
+                    {appointment.patient.gender || 'Not provided'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Diagnosis & Treatment */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <FaFileMedical className="h-5 w-5 text-gray-400 mr-2" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg mr-3">
+                <FaFileMedical className="h-5 w-5 text-green-600" />
+              </div>
               Diagnosis & Treatment
             </h2>
             <div className="space-y-4">
               <div>
-                <label htmlFor="diagnosis" className="block text-sm font-medium text-gray-700">
-                  Diagnosis *
+                <label htmlFor="diagnosis" className="block text-sm font-medium text-gray-700 mb-1">
+                  Diagnosis <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -459,140 +489,146 @@ const CreateMedicalRecord = () => {
                   name="diagnosis"
                   value={form.diagnosis}
                   onChange={handleChange}
-                  onBlur={handleBlur}
                   required
-                  className={`mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md ${
-                    touched.diagnosis && errors.diagnosis ? 'border-red-500' : ''
-                  }`}
-                  placeholder="Primary diagnosis"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter primary diagnosis"
                 />
-                {touched.diagnosis && errors.diagnosis && (
-                  <p className="mt-1 text-sm text-red-500">{errors.diagnosis}</p>
-                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Symptoms
                 </label>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={newSymptom}
                     onChange={(e) => setNewSymptom(e.target.value)}
-                    className="block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddSymptom();
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Add a symptom"
                   />
                   <button
                     type="button"
                     onClick={handleAddSymptom}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                   >
-                    Add
+                    <FaPlus className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {form.symptoms.map((symptom, idx) => (
-                    <div key={idx} className="inline-flex items-center bg-blue-50 px-2.5 py-0.5 rounded-full text-xs font-medium text-blue-700">
+                    <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                       {symptom}
                       <button
                         type="button"
                         onClick={() => handleRemoveSymptom(idx)}
-                        className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500"
+                        className="ml-2 hover:text-yellow-600"
                       >
-                        &times;
+                        <FaTimes className="h-3 w-3" />
                       </button>
-                    </div>
+                    </span>
                   ))}
                   {form.symptoms.length === 0 && (
-                    <span className="text-sm text-gray-500">No symptoms added yet</span>
+                    <span className="text-sm text-gray-500 italic">No symptoms added yet</span>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="treatment" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="treatment" className="block text-sm font-medium text-gray-700 mb-1">
                   Treatment Plan
                 </label>
                 <textarea
                   id="treatment"
                   name="treatment"
-                  rows={3}
+                  rows={4}
                   value={form.treatment}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
-                  placeholder="Treatment plan and recommendations"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter treatment plan and recommendations..."
                 />
               </div>
             </div>
           </div>
 
           {/* Medications */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <FaPills className="h-5 w-5 text-gray-400 mr-2" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                <FaPills className="h-5 w-5 text-purple-600" />
+              </div>
               Medications
             </h2>
             <div className="space-y-4">
               {form.medications.map((medication, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-md font-medium">Medication {idx + 1}</h3>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedication(idx)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
+                <div key={idx} className="bg-purple-50 p-5 rounded-xl border border-purple-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-md font-semibold text-gray-900">Medication {idx + 1}</h3>
+                    {form.medications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMedication(idx)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                       <input
                         type="text"
                         value={medication.name}
                         onChange={(e) => handleMedicationChange(idx, 'name', e.target.value)}
-                        className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Medication name"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Dosage</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
                       <input
                         type="text"
                         value={medication.dosage}
                         onChange={(e) => handleMedicationChange(idx, 'dosage', e.target.value)}
-                        className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="e.g., 500mg"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Frequency</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
                       <input
                         type="text"
                         value={medication.frequency}
                         onChange={(e) => handleMedicationChange(idx, 'frequency', e.target.value)}
-                        className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="e.g., 3 times daily"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Duration</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
                       <input
                         type="text"
                         value={medication.duration}
                         onChange={(e) => handleMedicationChange(idx, 'duration', e.target.value)}
-                        className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="e.g., 7 days"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Notes</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
                       <textarea
                         value={medication.notes}
                         onChange={(e) => handleMedicationChange(idx, 'notes', e.target.value)}
-                        className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
-                        placeholder="Additional instructions or notes"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Any special instructions..."
+                        rows={2}
                       />
                     </div>
                   </div>
@@ -601,111 +637,147 @@ const CreateMedicalRecord = () => {
               <button
                 type="button"
                 onClick={handleAddMedication}
-                className="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition-colors duration-200"
               >
-                + Add Another Medication
+                <FaPlus className="mr-2 h-4 w-4" />
+                Add Another Medication
               </button>
             </div>
           </div>
 
           {/* Vital Signs */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <FaHeartbeat className="h-5 w-5 text-gray-400 mr-2" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg mr-3">
+                <FaHeartbeat className="h-5 w-5 text-red-600" />
+              </div>
               Vital Signs
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Blood Pressure (mmHg)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaHeartbeat className="mr-1 h-4 w-4 text-gray-400" />
+                  Blood Pressure (mmHg)
+                </label>
                 <input
                   type="text"
                   name="vitalSigns.bloodPressure"
                   value={form.vitalSigns.bloodPressure}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="e.g., 120/80"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Heart Rate (bpm)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaHeartbeat className="mr-1 h-4 w-4 text-gray-400" />
+                  Heart Rate (bpm)
+                </label>
                 <input
                   type="number"
                   name="vitalSigns.heartRate"
                   value={form.vitalSigns.heartRate}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 72"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Temperature (°C)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaThermometerHalf className="mr-1 h-4 w-4 text-gray-400" />
+                  Temperature (°C)
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   name="vitalSigns.temperature"
                   value={form.vitalSigns.temperature}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 37.0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Respiratory Rate (/min)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaLungs className="mr-1 h-4 w-4 text-gray-400" />
+                  Respiratory Rate (/min)
+                </label>
                 <input
                   type="number"
                   name="vitalSigns.respiratoryRate"
                   value={form.vitalSigns.respiratoryRate}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 16"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Oxygen Saturation (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaTint className="mr-1 h-4 w-4 text-gray-400" />
+                  Oxygen Saturation (%)
+                </label>
                 <input
                   type="number"
                   name="vitalSigns.oxygenSaturation"
                   value={form.vitalSigns.oxygenSaturation}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 98"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaWeight className="mr-1 h-4 w-4 text-gray-400" />
+                  Weight (kg)
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   name="vitalSigns.weight"
                   value={form.vitalSigns.weight}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 70.5"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Height (cm)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaRulerVertical className="mr-1 h-4 w-4 text-gray-400" />
+                  Height (cm)
+                </label>
                 <input
                   type="number"
                   name="vitalSigns.height"
                   value={form.vitalSigns.height}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="e.g., 175"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">BMI</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <FaWeight className="mr-1 h-4 w-4 text-gray-400" />
+                  BMI
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   name="vitalSigns.bmi"
                   value={form.vitalSigns.bmi}
                   readOnly
-                  className="mt-1 block w-full shadow-sm sm:text-sm bg-gray-50 border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg"
+                  placeholder="Auto-calculated"
                 />
               </div>
             </div>
           </div>
 
           {/* Lab Results */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <FaFlask className="h-5 w-5 text-gray-400 mr-2" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                <FaFlask className="h-5 w-5 text-blue-600" />
+              </div>
               Laboratory Results
             </h2>
             
@@ -716,10 +788,10 @@ const CreateMedicalRecord = () => {
                   <button
                     key={idx}
                     type="button"
-                    className={`inline-block py-2 px-4 border-b-2 font-medium text-sm ${
+                                        className={`inline-block py-2 px-4 border-b-2 font-medium text-sm ${
                       activeLabIndex === idx
                         ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:border-gray-300'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                     onClick={() => setActiveLabIndex(idx)}
                   >
@@ -728,10 +800,11 @@ const CreateMedicalRecord = () => {
                 ))}
                 <button
                   type="button"
-                  className="inline-block py-2 px-4 border-b-2 border-transparent text-gray-500 hover:border-gray-300 font-medium text-sm"
+                  className="inline-block py-2 px-4 border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 font-medium text-sm"
                   onClick={handleAddLabResult}
                 >
-                  + Add New
+                  <FaPlus className="inline h-3 w-3 mr-1" />
+                  Add New
                 </button>
               </nav>
             </div>
@@ -740,55 +813,58 @@ const CreateMedicalRecord = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Test Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Test Name</label>
                   <input
                     type="text"
                     value={form.labResults[activeLabIndex].test}
                     onChange={(e) => handleLabResultChange(activeLabIndex, 'test', e.target.value)}
-                    className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., Complete Blood Count"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Result</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Result</label>
                   <input
                     type="text"
                     value={form.labResults[activeLabIndex].result}
                     onChange={(e) => handleLabResultChange(activeLabIndex, 'result', e.target.value)}
-                    className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Test results"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                   <input
                     type="date"
                     value={form.labResults[activeLabIndex].date}
                     onChange={(e) => handleLabResultChange(activeLabIndex, 'date', e.target.value)}
-                    className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                   <input
                     type="text"
                     value={form.labResults[activeLabIndex].notes}
                     onChange={(e) => handleLabResultChange(activeLabIndex, 'notes', e.target.value)}
-                    className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Additional notes"
                   />
                 </div>
               </div>
 
               {/* Lab attachments */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lab Documents</label>
+                <div className="flex flex-wrap gap-2 mb-3">
                   {form.labResults[activeLabIndex].attachments && form.labResults[activeLabIndex].attachments.map((attachment, idx) => (
-                    <div key={idx} className="flex items-center bg-blue-50 px-3 py-2 rounded-md">
+                    <div key={idx} className="flex items-center bg-blue-50 px-3 py-2 rounded-lg">
+                      <FaPaperclip className="h-4 w-4 text-blue-600 mr-2" />
                       <a
                         href={attachment.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
                       >
                         {attachment.name}
                       </a>
@@ -797,7 +873,7 @@ const CreateMedicalRecord = () => {
                         onClick={() => handleRemoveLabDocument(activeLabIndex, idx)}
                         className="ml-2 text-red-500 hover:text-red-700"
                       >
-                        &times;
+                        <FaTimes className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -810,11 +886,11 @@ const CreateMedicalRecord = () => {
                       value={labDocumentName}
                       onChange={(e) => setLabDocumentName(e.target.value)}
                       placeholder="Document name (optional)"
-                      className="block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                    <label className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                       <FaFileUpload className="mr-2 h-5 w-5 text-gray-400" />
                       {labDocumentFile ? labDocumentFile.name.substring(0, 20) + '...' : 'Choose File'}
                       <input
@@ -825,15 +901,13 @@ const CreateMedicalRecord = () => {
                       />
                     </label>
                   </div>
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={handleAddLabDocument}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Upload Document
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddLabDocument}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Upload
+                  </button>
                 </div>
               </div>
 
@@ -843,7 +917,7 @@ const CreateMedicalRecord = () => {
                   <button
                     type="button"
                     onClick={() => handleRemoveLabResult(activeLabIndex)}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
                   >
                     Remove This Lab Test
                   </button>
@@ -853,12 +927,17 @@ const CreateMedicalRecord = () => {
           </div>
 
           {/* Notes and Attachments */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Additional Notes & Attachments</h2>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="p-2 bg-gray-100 rounded-lg mr-3">
+                <FaNotesMedical className="h-5 w-5 text-gray-600" />
+              </div>
+              Additional Notes & Documents
+            </h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
                   Additional Notes
                 </label>
                 <textarea
@@ -867,21 +946,22 @@ const CreateMedicalRecord = () => {
                   rows={4}
                   value={form.notes}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
-                                    placeholder="Any additional notes or observations"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Any additional notes or observations..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Medical Documents</label>
+                <div className="flex flex-wrap gap-2 mb-3">
                   {form.attachments.map((attachment, idx) => (
-                    <div key={idx} className="flex items-center bg-blue-50 px-3 py-2 rounded-md">
+                    <div key={idx} className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
+                      <FaPaperclip className="h-4 w-4 text-gray-600 mr-2" />
                       <a
                         href={attachment.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                        className="text-sm font-medium text-gray-700 hover:text-gray-900"
                       >
                         {attachment.name}
                       </a>
@@ -890,7 +970,7 @@ const CreateMedicalRecord = () => {
                         onClick={() => handleRemoveDocument(idx)}
                         className="ml-2 text-red-500 hover:text-red-700"
                       >
-                        &times;
+                        <FaTimes className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -903,11 +983,11 @@ const CreateMedicalRecord = () => {
                       value={documentName}
                       onChange={(e) => setDocumentName(e.target.value)}
                       placeholder="Document name (optional)"
-                      className="block w-full shadow-sm sm:text-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                    <label className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                       <FaFileUpload className="mr-2 h-5 w-5 text-gray-400" />
                       {documentFile ? documentFile.name.substring(0, 20) + '...' : 'Choose File'}
                       <input
@@ -918,15 +998,13 @@ const CreateMedicalRecord = () => {
                       />
                     </label>
                   </div>
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={handleAddDocument}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Upload Document
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddDocument}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    Upload
+                  </button>
                 </div>
               </div>
             </div>
@@ -934,14 +1012,23 @@ const CreateMedicalRecord = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <LoadingButton
+            <button
               type="submit"
-              isLoading={submitting || isSubmitting}
-              disabled={submitting || isSubmitting}
-              className="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              disabled={submitting}
+              className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-medium rounded-lg hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Medical Record
-            </LoadingButton>
+              {submitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <FaFileMedical className="mr-3 h-5 w-5" />
+                  Create Medical Record
+                </>
+              )}
+            </button>
           </div>
         </form>
       </div>
@@ -950,3 +1037,4 @@ const CreateMedicalRecord = () => {
 };
 
 export default CreateMedicalRecord;
+

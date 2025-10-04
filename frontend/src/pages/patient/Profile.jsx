@@ -1,12 +1,31 @@
-// src/pages/patient/Profile.jsx
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaVenusMars, FaTint, FaMapMarkerAlt, FaUserInjured, FaExclamationTriangle } from 'react-icons/fa';
-import LoadingSpinner, { LoadingButton } from '../../components/LoadingSpinner';
-import useFormValidation from '../../hooks/useFormValidation';
+import { 
+  FaUser, 
+  FaEnvelope, 
+  FaPhone, 
+  FaCalendarAlt, 
+  FaVenusMars, 
+  FaTint, 
+  FaMapMarkerAlt, 
+  FaUserInjured, 
+  FaExclamationTriangle,
+  FaCamera,
+  FaEdit,
+  FaTimes,
+  FaCheck,
+  FaAllergies,
+  FaNotesMedical,
+  FaUserShield,
+  FaIdCard,
+  FaHome,
+  FaCity,
+  FaGlobeAmericas,
+  FaMailBulk
+} from 'react-icons/fa';
 
 const Profile = () => {
   const { currentUser, updateProfile } = useAuth();
@@ -18,22 +37,13 @@ const Profile = () => {
   // Form states
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [isEditingPatient, setIsEditingPatient] = useState(false);
-  const [newAllergy, setNewAllergy] = useState('');
-  const [newCondition, setNewCondition] = useState('');
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Initial user form state
-  const initialUserForm = {
+  const [userForm, setUserForm] = useState({
     name: '',
     email: '',
     phone: '',
     profilePicture: ''
-  };
-
-  // Initial patient form state
-  const initialPatientForm = {
+  });
+  const [patientForm, setPatientForm] = useState({
     dateOfBirth: '',
     gender: '',
     bloodGroup: '',
@@ -51,59 +61,13 @@ const Profile = () => {
     },
     allergies: [],
     chronicConditions: []
-  };
-
-  // Validation functions
-  const validateUserForm = (values) => {
-    const errors = {};
-    if (!values.name) errors.name = 'Name is required';
-    if (!values.email) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(values.email)) {
-      errors.email = 'Email is invalid';
-    }
-    return errors;
-  };
-
-  const validatePatientForm = (values) => {
-    const errors = {};
-    if (!values.dateOfBirth) errors.dateOfBirth = 'Date of birth is required';
-    if (!values.gender) errors.gender = 'Gender is required';
-    return errors;
-  };
-
-  // Form handling with useFormValidation
-  const {
-    values: userForm,
-    errors: userErrors,
-    touched: userTouched,
-    isSubmitting: userSubmitting,
-    handleChange: handleUserChange,
-    handleBlur: handleUserBlur,
-    handleSubmit: handleUserFormSubmit,
-    resetForm: resetUserForm,
-    setValues: setUserForm
-  } = useFormValidation(
-    initialUserForm,
-    validateUserForm,
-    submitUserForm
-  );
-
-  const {
-    values: patientForm,
-    errors: patientErrors,
-    touched: patientTouched,
-    isSubmitting: patientSubmitting,
-    handleChange: handlePatientChange,
-    handleBlur: handlePatientBlur,
-    handleSubmit: handlePatientFormSubmit,
-    resetForm: resetPatientForm,
-    setValues: setPatientForm
-  } = useFormValidation(
-    initialPatientForm,
-    validatePatientForm,
-    submitPatientForm
-  );
+  });
+  
+  const [newAllergy, setNewAllergy] = useState('');
+  const [newCondition, setNewCondition] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchUserAndPatientProfiles();
@@ -159,23 +123,6 @@ const Profile = () => {
     }
   };
 
-  // Custom handler for nested patient form fields
-  const handleNestedPatientChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setPatientForm({
-        ...patientForm,
-        [parent]: {
-          ...patientForm[parent],
-          [child]: value
-        }
-      });
-    } else {
-      handlePatientChange(e);
-    }
-  };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -202,6 +149,62 @@ const Profile = () => {
       console.error('Error uploading image:', err);
       toast.error('Failed to upload profile picture');
       return null;
+    }
+  };
+
+  const handleUserFormSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      const updatedUserData = { ...userForm };
+
+      // Upload image if changed
+      if (imageFile) {
+        const imageUrl = await uploadImage();
+        if (imageUrl) {
+          updatedUserData.profilePicture = imageUrl;
+        }
+      }
+
+      await updateProfile(updatedUserData);
+      setUserProfile(prev => ({
+        ...prev,
+        ...updatedUserData
+      }));
+      setIsEditingUser(false);
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      console.error('Error updating user profile:', err);
+      toast.error(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePatientFormSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      let response;
+      
+      if (patientProfile) {
+        // Update existing patient profile
+        response = await api.put(`/patients/${patientProfile._id}`, patientForm);
+      } else {
+        // Create new patient profile
+        response = await api.post('/patients', patientForm);
+      }
+      
+      setPatientProfile(response.data);
+      setIsEditingPatient(false);
+      toast.success(patientProfile ? 'Medical profile updated successfully' : 'Medical profile created successfully');
+    } catch (err) {
+      console.error('Error updating patient profile:', err);
+      toast.error(err.response?.data?.message || 'Failed to update medical profile');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -239,62 +242,12 @@ const Profile = () => {
     });
   };
 
-  async function submitUserForm(values) {
-    try {
-      setSubmitting(true);
-      const updatedUserData = { ...values };
-
-      // Upload image if changed
-      if (imageFile) {
-        const imageUrl = await uploadImage();
-        if (imageUrl) {
-          updatedUserData.profilePicture = imageUrl;
-        }
-      }
-
-      await updateProfile(updatedUserData);
-      setUserProfile(prev => ({
-        ...prev,
-        ...updatedUserData
-      }));
-      setIsEditingUser(false);
-      toast.success('User profile updated successfully');
-    } catch (err) {
-      console.error('Error updating user profile:', err);
-      toast.error(err.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function submitPatientForm(values) {
-    try {
-      setSubmitting(true);
-      let response;
-      
-      if (patientProfile) {
-        // Update existing patient profile
-        response = await api.put(`/patients/${patientProfile._id}`, values);
-      } else {
-        // Create new patient profile
-        response = await api.post('/patients', values);
-      }
-      
-      setPatientProfile(response.data);
-      setIsEditingPatient(false);
-      toast.success(patientProfile ? 'Patient profile updated successfully' : 'Patient profile created successfully');
-    } catch (err) {
-      console.error('Error updating patient profile:', err);
-      toast.error(err.response?.data?.message || 'Failed to update patient profile');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   if (isLoading) {
     return (
       <DashboardLayout>
-        <LoadingSpinner size="large" />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
+        </div>
       </DashboardLayout>
     );
   }
@@ -302,23 +255,26 @@ const Profile = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-            <h1 className="text-2xl font-bold">My Profile</h1>
-            <p className="mt-1 text-blue-100">
-              Manage your personal information and medical details
-            </p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center">
+              <FaUser className="h-10 w-10 text-white mr-4" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">My Profile</h1>
+                <p className="text-blue-100 text-lg mt-1">
+                  Manage your personal information and medical details
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -326,22 +282,27 @@ const Profile = () => {
           </div>
         )}
 
-        {/* User Profile Section */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Account Information</h2>
+        {/* Account Information */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                <FaIdCard className="h-6 w-6 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Account Information</h2>
+            </div>
             {!isEditingUser ? (
               <button
                 onClick={() => setIsEditingUser(true)}
-                className="px-3 py-1 border border-gray-300 text-sm rounded-md hover:bg-gray-50"
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
               >
+                <FaEdit className="mr-2 h-4 w-4" />
                 Edit
               </button>
             ) : (
               <button
                 onClick={() => {
                   setIsEditingUser(false);
-                  resetUserForm();
                   setUserForm({
                     name: userProfile.name,
                     email: userProfile.email,
@@ -351,137 +312,158 @@ const Profile = () => {
                   setImageFile(null);
                   setImagePreview(null);
                 }}
-                className="px-3 py-1 border border-gray-300 text-sm rounded-md text-red-600 hover:bg-gray-50"
+                className="inline-flex items-center px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-medium text-red-700 hover:bg-red-200 hover:shadow-sm transition-all duration-200"
               >
+                <FaTimes className="mr-2 h-4 w-4" />
                 Cancel
               </button>
             )}
           </div>
 
-          <div className="px-6 py-4">
+          <div className="p-6">
             {isEditingUser ? (
               <form onSubmit={handleUserFormSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Profile Picture */}
                   <div className="md:col-span-1 flex flex-col items-center">
-                    <div className="w-32 h-32 rounded-full overflow-hidden mb-3">
-                      <img
-                        src={imagePreview || userForm.profilePicture || "https://via.placeholder.com/128"}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="relative">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                        <img
+                          src={imagePreview || userForm.profilePicture || `https://ui-avatars.com/api/?name=${userForm.name}&background=0891b2&color=fff`}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <label className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full cursor-pointer hover:bg-blue-700 transition-colors duration-200 shadow-lg">
+                        <FaCamera className="h-5 w-5 text-white" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageChange}
+                        />
+                      </label>
                     </div>
-                    <label className="px-3 py-1.5 border border-gray-300 text-sm rounded-md cursor-pointer bg-white hover:bg-gray-50">
-                      Change Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </label>
+                    <p className="mt-3 text-sm text-gray-500">Click camera to update photo</p>
                   </div>
 
+                  {/* Form Fields */}
                   <div className="md:col-span-2 space-y-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                         Full Name
                       </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        value={userForm.name}
-                        onChange={handleUserChange}
-                        onBlur={handleUserBlur}
-                        required
-                        className={`mt-1 block w-full border ${userTouched.name && userErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                      />
-                      {userTouched.name && userErrors.name && (
-                        <p className="mt-1 text-sm text-red-600">{userErrors.name}</p>
-                      )}
+                      <div className="relative">
+                        <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          id="name"
+                          value={userForm.name}
+                          onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                         Email Address
                       </label>
-                      <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        value={userForm.email}
-                        onChange={handleUserChange}
-                        onBlur={handleUserBlur}
-                        required
-                        className={`mt-1 block w-full border ${userTouched.email && userErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                      />
-                      {userTouched.email && userErrors.email && (
-                        <p className="mt-1 text-sm text-red-600">{userErrors.email}</p>
-                      )}
+                      <div className="relative">
+                        <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="email"
+                          id="email"
+                          value={userForm.email}
+                          onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number
                       </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        id="phone"
-                        value={userForm.phone}
-                        onChange={handleUserChange}
-                        onBlur={handleUserBlur}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
+                      <div className="relative">
+                        <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="tel"
+                          id="phone"
+                          value={userForm.phone}
+                          onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-end">
-                      <LoadingButton
+                      <button
                         type="submit"
-                        isLoading={submitting || userSubmitting}
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={submitting}
+                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Save Changes
-                      </LoadingButton>
+                        {submitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaCheck className="mr-2 h-4 w-4" />
+                            Save Changes
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
               </form>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Profile Picture Display */}
                 <div className="md:col-span-1 flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl">
                     <img
-                      src={userProfile.profilePicture || "https://via.placeholder.com/128"}
+                      src={userProfile.profilePicture || `https://ui-avatars.com/api/?name=${userProfile.name}&background=0891b2&color=fff`}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
 
+                {/* User Info Display */}
                 <div className="md:col-span-2 space-y-4">
-                  <div className="flex items-center">
-                    <FaUser className="h-5 w-5 text-gray-400 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Full Name</p>
-                      <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center">
+                      <FaUser className="h-5 w-5 text-gray-400 mr-3" />
+                      <div>
+                        <p className="text-sm text-gray-500">Full Name</p>
+                        <p className="text-lg font-medium text-gray-900">{userProfile.name}</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <FaEnvelope className="h-5 w-5 text-gray-400 mr-2" />
-                    <div>
-                      <p className="text-sm text-gray-500">Email Address</p>
-                      <p className="text-sm font-medium text-gray-900">{userProfile.email}</p>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center">
+                      <FaEnvelope className="h-5 w-5 text-gray-400 mr-3" />
+                      <div>
+                        <p className="text-sm text-gray-500">Email Address</p>
+                        <p className="text-lg font-medium text-gray-900">{userProfile.email}</p>
+                      </div>
                     </div>
                   </div>
 
                   {userProfile.phone && (
-                    <div className="flex items-center">
-                      <FaPhone className="h-5 w-5 text-gray-400 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-500">Phone Number</p>
-                        <p className="text-sm font-medium text-gray-900">{userProfile.phone}</p>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center">
+                        <FaPhone className="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-sm text-gray-500">Phone Number</p>
+                          <p className="text-lg font-medium text-gray-900">{userProfile.phone}</p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -491,22 +473,27 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Patient Profile Section */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Medical Information</h2>
+        {/* Medical Information */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg mr-3">
+                <FaNotesMedical className="h-6 w-6 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Medical Information</h2>
+            </div>
             {!isEditingPatient ? (
               <button
                 onClick={() => setIsEditingPatient(true)}
-                className="px-3 py-1 border border-gray-300 text-sm rounded-md hover:bg-gray-50"
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
               >
+                <FaEdit className="mr-2 h-4 w-4" />
                 {patientProfile ? 'Edit' : 'Complete Profile'}
               </button>
             ) : (
               <button
                 onClick={() => {
                   setIsEditingPatient(false);
-                  resetPatientForm();
                   if (patientProfile) {
                     setPatientForm({
                       dateOfBirth: patientProfile.dateOfBirth ? new Date(patientProfile.dateOfBirth).toISOString().split('T')[0] : '',
@@ -531,150 +518,561 @@ const Profile = () => {
                   setNewAllergy('');
                   setNewCondition('');
                 }}
-                className="px-3 py-1 border border-gray-300 text-sm rounded-md text-red-600 hover:bg-gray-50"
+                className="inline-flex items-center px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-medium text-red-700 hover:bg-red-200 hover:shadow-sm transition-all duration-200"
               >
+                <FaTimes className="mr-2 h-4 w-4" />
                 Cancel
               </button>
             )}
           </div>
 
-          <div className="px-6 py-4">
+          <div className="p-6">
             {!patientProfile && !isEditingPatient ? (
-              <div className="text-center py-8">
-                <FaUserInjured className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No medical profile yet</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating your medical profile for better healthcare.
-                </p>
-                <div className="mt-6">
-                  <button
-                    onClick={() => setIsEditingPatient(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    Complete Medical Profile
-                  </button>
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
+                  <FaUserInjured className="h-12 w-12 text-gray-400" />
                 </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No medical profile yet</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">
+                  Complete your medical profile to help doctors provide better healthcare services.
+                </p>
+                <button
+                  onClick={() => setIsEditingPatient(true)}
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <FaUserShield className="mr-2 h-5 w-5" />
+                  Complete Medical Profile
+                </button>
               </div>
             ) : isEditingPatient ? (
-              <form onSubmit={handlePatientFormSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      id="dateOfBirth"
-                      value={patientForm.dateOfBirth}
-                      onChange={handlePatientChange}
-                      onBlur={handlePatientBlur}
-                      required
-                      className={`mt-1 block w-full border ${patientTouched.dateOfBirth && patientErrors.dateOfBirth ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                    />
-                    {patientTouched.dateOfBirth && patientErrors.dateOfBirth && (
-                      <p className="mt-1 text-sm text-red-600">{patientErrors.dateOfBirth}</p>
-                    )}
-                  </div>
+              <form onSubmit={handlePatientFormSubmit} className="space-y-8">
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <FaIdCard className="h-5 w-5 text-blue-600" />
+                    </div>
+                    Basic Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date of Birth
+                      </label>
+                      <div className="relative">
+                        <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="date"
+                          value={patientForm.dateOfBirth}
+                          onChange={(e) => setPatientForm({ ...patientForm, dateOfBirth: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                    </div>
 
-                  <div>
-                    <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-                      Gender
-                    </label>
-                    <select
-                      id="gender"
-                      name="gender"
-                      value={patientForm.gender}
-                      onChange={handlePatientChange}
-                      onBlur={handlePatientBlur}
-                      required
-                      className={`mt-1 block w-full border ${patientTouched.gender && patientErrors.gender ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                    {patientTouched.gender && patientErrors.gender && (
-                      <p className="mt-1 text-sm text-red-600">{patientErrors.gender}</p>
-                    )}
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Gender
+                      </label>
+                      <div className="relative">
+                        <FaVenusMars className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <select
+                          value={patientForm.gender}
+                          onChange={(e) => setPatientForm({ ...patientForm, gender: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none"
+                          required
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700">
-                      Blood Group
-                    </label>
-                    <select
-                      id="bloodGroup"
-                      name="bloodGroup"
-                      value={patientForm.bloodGroup}
-                      onChange={handlePatientChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    >
-                      <option value="Unknown">Unknown</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                    </select>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Blood Group
+                      </label>
+                      <div className="relative">
+                        <FaTint className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <select
+                          value={patientForm.bloodGroup}
+                          onChange={(e) => setPatientForm({ ...patientForm, bloodGroup: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none"
+                        >
+                          <option value="">Select Blood Group</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Rest of the form... */}
-                
-                {/* Address Section */}
+                {/* Address Information */}
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Address</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                      <FaMapMarkerAlt className="h-5 w-5 text-purple-600" />
+                    </div>
+                    Address Information
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label htmlFor="street" className="block text-sm font-medium text-gray-700">
-                        Street
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Street Address
                       </label>
-                      <input
-                        type="text"
-                        name="address.street"
-                        id="street"
-                        value={patientForm.address.street}
-                        onChange={handleNestedPatientChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
+                      <div className="relative">
+                        <FaHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          value={patientForm.address.street}
+                          onChange={(e) => setPatientForm({ 
+                            ...patientForm, 
+                            address: { ...patientForm.address, street: e.target.value }
+                          })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="123 Main Street"
+                        />
+                      </div>
                     </div>
+
                     <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         City
                       </label>
+                      <div className="relative">
+                        <FaCity className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          value={patientForm.address.city}
+                          onChange={(e) => setPatientForm({ 
+                            ...patientForm, 
+                            address: { ...patientForm.address, city: e.target.value }
+                          })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="New York"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        State
+                      </label>
+                      <div className="relative">
+                        <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          value={patientForm.address.state}
+                          onChange={(e) => setPatientForm({ 
+                            ...patientForm, 
+                            address: { ...patientForm.address, state: e.target.value }
+                          })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="NY"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        ZIP Code
+                      </label>
+                      <div className="relative">
+                        <FaMailBulk className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          value={patientForm.address.zipCode}
+                          onChange={(e) => setPatientForm({ 
+                            ...patientForm, 
+                            address: { ...patientForm.address, zipCode: e.target.value }
+                          })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="10001"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Country
+                      </label>
+                      <div className="relative">
+                        <FaGlobeAmericas className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="text"
+                          value={patientForm.address.country}
+                          onChange={(e) => setPatientForm({ 
+                            ...patientForm, 
+                            address: { ...patientForm.address, country: e.target.value }
+                          })}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="United States"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Emergency Contact */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="p-2 bg-red-100 rounded-lg mr-3">
+                      <FaUserShield className="h-5 w-5 text-red-600" />
+                    </div>
+                    Emergency Contact
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact Name
+                      </label>
                       <input
                         type="text"
-                        name="address.city"
-                        id="city"
-                        value={patientForm.address.city}
-                        onChange={handleNestedPatientChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        value={patientForm.emergencyContact.name}
+                        onChange={(e) => setPatientForm({ 
+                          ...patientForm, 
+                          emergencyContact: { ...patientForm.emergencyContact, name: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="John Doe"
                       />
                     </div>
-                    {/* Other address fields... */}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={patientForm.emergencyContact.phone}
+                        onChange={(e) => setPatientForm({ 
+                          ...patientForm, 
+                          emergencyContact: { ...patientForm.emergencyContact, phone: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="+1 234 567 8900"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Relationship
+                      </label>
+                      <input
+                        type="text"
+                        value={patientForm.emergencyContact.relationship}
+                        onChange={(e) => setPatientForm({ 
+                          ...patientForm, 
+                          emergencyContact: { ...patientForm.emergencyContact, relationship: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Spouse"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medical History */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                      <FaNotesMedical className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    Medical History
+                  </h3>
+                  
+                  {/* Allergies */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Allergies
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newAllergy}
+                          onChange={(e) => setNewAllergy(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddAllergy();
+                            }
+                          }}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="Enter allergy (e.g., Peanuts, Penicillin)"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddAllergy}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {patientForm.allergies.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {patientForm.allergies.map((allergy, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-sm font-medium"
+                            >
+                              <FaAllergies className="mr-1.5 h-3 w-3" />
+                              {allergy}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAllergy(index)}
+                                className="ml-2 hover:text-red-600"
+                              >
+                                <FaTimes className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Chronic Conditions */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Chronic Conditions
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCondition}
+                          onChange={(e) => setNewCondition(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCondition();
+                            }
+                          }}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="Enter condition (e.g., Diabetes, Hypertension)"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCondition}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {patientForm.chronicConditions.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {patientForm.chronicConditions.map((condition, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-medium"
+                            >
+                              <FaExclamationTriangle className="mr-1.5 h-3 w-3" />
+                              {condition}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCondition(index)}
+                                className="ml-2 hover:text-orange-600"
+                              >
+                                <FaTimes className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end">
-                  <LoadingButton
+                <div className="flex justify-end pt-4">
+                  <button
                     type="submit"
-                    isLoading={submitting || patientSubmitting}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={submitting}
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {patientProfile ? 'Update Medical Profile' : 'Create Medical Profile'}
-                  </LoadingButton>
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheck className="mr-2 h-4 w-4" />
+                        {patientProfile ? 'Update Medical Profile' : 'Create Medical Profile'}
+                      </>
+                    )}
+                  </button>
                 </div>
               </form>
             ) : (
-              // Display patient profile information
+              // Display Medical Profile
               <div className="space-y-6">
-                {/* Patient information display... */}
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <FaIdCard className="h-5 w-5 text-blue-600" />
+                    </div>
+                    Basic Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center">
+                        <FaCalendarAlt className="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-sm text-gray-500">Date of Birth</p>
+                          <p className="text-lg font-medium text-gray-900">
+                            {patientProfile.dateOfBirth 
+                              ? new Date(patientProfile.dateOfBirth).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })
+                              : 'Not set'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center">
+                        <FaVenusMars className="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-sm text-gray-500">Gender</p>
+                          <p className="text-lg font-medium text-gray-900 capitalize">
+                            {patientProfile.gender || 'Not set'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center">
+                        <FaTint className="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-sm text-gray-500">Blood Group</p>
+                          <p className="text-lg font-medium text-gray-900">
+                            {patientProfile.bloodGroup || 'Not set'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                {patientProfile.address && (patientProfile.address.street || patientProfile.address.city) && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                        <FaMapMarkerAlt className="h-5 w-5 text-purple-600" />
+                      </div>
+                      Address
+                    </h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-gray-900">
+                        {[
+                          patientProfile.address.street,
+                          patientProfile.address.city,
+                          patientProfile.address.state,
+                          patientProfile.address.zipCode,
+                          patientProfile.address.country
+                        ].filter(Boolean).join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Emergency Contact */}
+                {patientProfile.emergencyContact && patientProfile.emergencyContact.name && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <div className="p-2 bg-red-100 rounded-lg mr-3">
+                        <FaUserShield className="h-5 w-5 text-red-600" />
+                      </div>
+                      Emergency Contact
+                    </h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Name</p>
+                          <p className="text-lg font-medium text-gray-900">
+                            {patientProfile.emergencyContact.name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Phone</p>
+                          <p className="text-lg font-medium text-gray-900">
+                            {patientProfile.emergencyContact.phone}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Relationship</p>
+                          <p className="text-lg font-medium text-gray-900">
+                            {patientProfile.emergencyContact.relationship}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Medical History */}
+                {(patientProfile.allergies?.length > 0 || patientProfile.chronicConditions?.length > 0) && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                        <FaNotesMedical className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      Medical History
+                    </h3>
+                    
+                    {patientProfile.allergies?.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Allergies</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {patientProfile.allergies.map((allergy, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-sm font-medium"
+                            >
+                              <FaAllergies className="mr-1.5 h-3 w-3" />
+                              {allergy}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {patientProfile.chronicConditions?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Chronic Conditions</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {patientProfile.chronicConditions.map((condition, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-medium"
+                            >
+                              <FaExclamationTriangle className="mr-1.5 h-3 w-3" />
+                              {condition}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

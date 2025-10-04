@@ -1,4 +1,3 @@
-// src/pages/doctor/Patients.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -9,7 +8,14 @@ import {
   FaCalendarAlt, 
   FaFileMedical, 
   FaPrescription, 
-  FaArrowRight 
+  FaArrowRight,
+  FaPhone,
+  FaEnvelope,
+  FaTint,
+  FaVenusMars,
+  FaBirthdayCake,
+  FaNotesMedical,
+  FaHistory
 } from 'react-icons/fa';
 
 const Patients = () => {
@@ -54,11 +60,23 @@ const Patients = () => {
     }
   };
 
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -67,23 +85,25 @@ const Patients = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-            <h1 className="text-2xl font-bold">My Patients</h1>
-            <p className="mt-1 text-blue-100">
-              View and manage all patients under your care
-            </p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center">
+              <FaUserInjured className="h-10 w-10 text-white mr-4" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">My Patients</h1>
+                <p className="text-purple-100 text-lg mt-1">
+                  View and manage all patients under your care
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -92,15 +112,13 @@ const Patients = () => {
         )}
 
         {/* Search */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="h-5 w-5 text-gray-400" />
-            </div>
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
-              placeholder="Search patients by name, email, or phone"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Search patients by name, email, or phone..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -108,90 +126,140 @@ const Patients = () => {
         </div>
 
         {/* Patients list */}
-        <div className="bg-white shadow overflow-hidden rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <li key={patient._id} className="px-6 py-5 hover:bg-gray-50">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <img 
-                        className="h-12 w-12 rounded-full" 
-                        src={patient.user.profilePicture || "https://via.placeholder.com/48"} 
-                        alt={patient.user.name} 
-                      />
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">{patient.user.name}</h3>
-                        <div className="flex space-x-2">
-                          <Link
-                            to={`/doctor/appointments/new?patientId=${patient._id}`}
-                            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                          >
-                            <FaCalendarAlt className="mr-1 h-4 w-4 text-gray-500" />
-                            Schedule
-                          </Link>
-                          <Link
-                            to={`/doctor/patients/${patient._id}`}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
-                          >
-                            Details <FaArrowRight className="ml-1 h-3 w-3" />
-                          </Link>
-                        </div>
+        {filteredPatients.length > 0 ? (
+          <div className="space-y-4">
+            {filteredPatients.map((patient) => (
+              <div key={patient._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200">
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      {/* Profile Picture */}
+                      <div className="flex-shrink-0">
+                        <img 
+                          className="h-16 w-16 rounded-full object-cover border-3 border-white shadow-lg" 
+                          src={patient.user.profilePicture || `https://ui-avatars.com/api/?name=${patient.user.name}&background=9333ea&color=fff`} 
+                          alt={patient.user.name} 
+                        />
                       </div>
-                      <div className="mt-1 grid grid-cols-1 md:grid-cols-3 gap-y-1 gap-x-4">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <FaUserInjured className="mr-1.5 h-4 w-4 text-gray-400" />
-                          <span>
-                            {patient.gender ? `${patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)}, ` : ''}
-                            {patient.dateOfBirth ? 
-                              `${new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} years` : 
-                              'No age info'}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <FaFileMedical className="mr-1.5 h-4 w-4 text-gray-400" />
-                          <span>Blood Group: {patient.bloodGroup || 'Unknown'}</span>
-                        </div>
-                        {patient.user.phone && (
-                          <div className="flex items-center text-sm text-gray-500">
-                            <svg className="mr-1.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span>{patient.user.phone}</span>
+                      
+                      {/* Patient Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{patient.user.name}</h3>
+                        
+                        {/* Contact Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <FaEnvelope className="mr-2 h-4 w-4 text-gray-400" />
+                            <span className="truncate">{patient.user.email}</span>
                           </div>
-                        )}
+                          {patient.user.phone && (
+                            <div className="flex items-center text-sm text-gray-600">
+                              <FaPhone className="mr-2 h-4 w-4 text-gray-400" />
+                              <span>{patient.user.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Medical Info Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {patient.gender && (
+                            <div className="bg-purple-50 p-2 rounded-lg">
+                              <div className="flex items-center text-xs text-purple-800">
+                                <FaVenusMars className="mr-1.5 h-3 w-3" />
+                                <span className="font-medium capitalize">{patient.gender}</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {patient.dateOfBirth && (
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                              <div className="flex items-center text-xs text-blue-800">
+                                <FaBirthdayCake className="mr-1.5 h-3 w-3" />
+                                <span className="font-medium">{calculateAge(patient.dateOfBirth)} years</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {patient.bloodGroup && patient.bloodGroup !== 'Unknown' && (
+                            <div className="bg-red-50 p-2 rounded-lg">
+                              <div className="flex items-center text-xs text-red-800">
+                                <FaTint className="mr-1.5 h-3 w-3" />
+                                <span className="font-medium">{patient.bloodGroup}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Quick Links */}
+                        <div className="flex flex-wrap gap-3 mt-4">
+                          <Link 
+                            to={`/doctor/medical-records?patientId=${patient._id}`} 
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-green-600 transition-colors duration-200"
+                          >
+                            <FaFileMedical className="mr-1.5 h-4 w-4" />
+                            Medical Records
+                          </Link>
+                          <Link 
+                            to={`/doctor/prescriptions?patientId=${patient._id}`} 
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-purple-600 transition-colors duration-200"
+                          >
+                            <FaPrescription className="mr-1.5 h-4 w-4" />
+                            Prescriptions
+                          </Link>
+                          <Link 
+                            to={`/doctor/appointments?patientId=${patient._id}`} 
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                          >
+                            <FaHistory className="mr-1.5 h-4 w-4" />
+                            Appointment History
+                          </Link>
+                        </div>
                       </div>
                     </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-2 ml-4">
+                      <Link
+                        to={`/doctor/appointments/new?patientId=${patient._id}`}
+                        className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+                      >
+                        <FaCalendarAlt className="mr-2 h-4 w-4" />
+                        Schedule
+                      </Link>
+                      <Link
+                        to={`/doctor/patients/${patient._id}`}
+                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                      >
+                        View Profile
+                        <FaArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
-                  <div className="mt-4 flex space-x-6">
-                    <Link to={`/doctor/medical-records?patientId=${patient._id}`} className="flex items-center text-sm text-gray-600 hover:text-blue-600">
-                      <FaFileMedical className="mr-1 h-4 w-4" />
-                      Medical Records
-                    </Link>
-                    <Link to={`/doctor/prescriptions?patientId=${patient._id}`} className="flex items-center text-sm text-gray-600 hover:text-blue-600">
-                      <FaPrescription className="mr-1 h-4 w-4" />
-                      Prescriptions
-                    </Link>
-                    <Link to={`/doctor/appointments?patientId=${patient._id}`} className="flex items-center text-sm text-gray-600 hover:text-blue-600">
-                      <FaCalendarAlt className="mr-1 h-4 w-4" />
-                      Appointments
-                    </Link>
-                  </div>
-                </li>
-              ))
-            ) : (
-              <li className="px-6 py-12 text-center">
-                <FaUserInjured className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-lg font-medium text-gray-900">No patients found</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {searchTerm ? `No patients matching "${searchTerm}"` : 'You don\'t have any patients yet.'}
-                </p>
-              </li>
-            )}
-          </ul>
-        </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-8 py-16 text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
+                <FaUserInjured className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
+              <p className="text-gray-500 max-w-md mx-auto">
+                {searchTerm ? `No patients matching "${searchTerm}"` : 'You don\'t have any patients yet.'}
+              </p>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="mt-4 inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-200 transition-colors duration-200"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -1,4 +1,3 @@
-// src/pages/doctor/Prescriptions.jsx
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -12,7 +11,13 @@ import {
   FaPills, 
   FaEye,
   FaPlus,
-  FaFilter
+  FaFilter,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+  FaClock,
+  FaNotesMedical,
+  FaChevronRight
 } from 'react-icons/fa';
 
 const Prescriptions = () => {
@@ -78,6 +83,51 @@ const Prescriptions = () => {
     return prescription.status === 'active' && new Date(prescription.expiryDate) < new Date();
   };
 
+  // Get status info for badges
+  const getStatusInfo = (prescription) => {
+    if (prescription.status === 'completed') {
+      return {
+        icon: FaCheckCircle,
+        text: 'Completed',
+        color: 'text-green-800',
+        bg: 'bg-green-100',
+        border: 'border-green-200',
+        iconBg: 'bg-green-100',
+        iconColor: 'text-green-600'
+      };
+    } else if (prescription.status === 'cancelled') {
+      return {
+        icon: FaTimesCircle,
+        text: 'Cancelled',
+        color: 'text-red-800',
+        bg: 'bg-red-100',
+        border: 'border-red-200',
+        iconBg: 'bg-red-100',
+        iconColor: 'text-red-600'
+      };
+    } else if (isPrescriptionExpired(prescription)) {
+      return {
+        icon: FaExclamationTriangle,
+        text: 'Expired',
+        color: 'text-yellow-800',
+        bg: 'bg-yellow-100',
+        border: 'border-yellow-200',
+        iconBg: 'bg-yellow-100',
+        iconColor: 'text-yellow-600'
+      };
+    } else {
+      return {
+        icon: FaCheckCircle,
+        text: 'Active',
+        color: 'text-blue-800',
+        bg: 'bg-blue-100',
+        border: 'border-blue-200',
+        iconBg: 'bg-blue-100',
+        iconColor: 'text-blue-600'
+      };
+    }
+  };
+
   // Filter prescriptions based on search term, selected patient, and status
   const filteredPrescriptions = prescriptions.filter(prescription => {
     // Check if any medication name matches the search term
@@ -101,7 +151,7 @@ const Prescriptions = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -110,23 +160,34 @@ const Prescriptions = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
-            <h1 className="text-2xl font-bold">Prescriptions</h1>
-            <p className="mt-1 text-purple-100">
-              View and manage patient prescriptions
-            </p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <FaPrescription className="h-10 w-10 text-white mr-4" />
+                <div>
+                  <h1 className="text-3xl font-bold text-white">Prescriptions</h1>
+                  <p className="text-purple-100 text-lg mt-1">
+                    Manage and track patient prescriptions
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/doctor/prescriptions/create"
+                className="inline-flex items-center px-6 py-3 bg-white text-purple-700 font-medium rounded-lg hover:bg-purple-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                <FaPlus className="mr-2 h-5 w-5" />
+                Create Prescription
+              </Link>
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -135,17 +196,15 @@ const Prescriptions = () => {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className="h-5 w-5 text-gray-400" />
-                </div>
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search by medication"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  placeholder="Search by medication..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -154,11 +213,9 @@ const Prescriptions = () => {
 
             <div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="h-5 w-5 text-gray-400" />
-                </div>
+                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <select
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none transition-all duration-200"
                   value={selectedPatient}
                   onChange={(e) => setSelectedPatient(e.target.value)}
                 >
@@ -172,11 +229,9 @@ const Prescriptions = () => {
 
             <div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaFilter className="h-5 w-5 text-gray-400" />
-                </div>
+                <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <select
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none transition-all duration-200"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -191,140 +246,169 @@ const Prescriptions = () => {
           </div>
         </div>
 
-        {/* Action button for creating new prescription */}
-        <div className="flex justify-end">
-          <Link
-            to="/doctor/prescriptions/create"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 shadow-sm"
-          >
-            <FaPlus className="mr-2 -ml-1 h-4 w-4" />
-            Create Prescription
-          </Link>
-        </div>
-
         {/* Prescriptions List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {filteredPrescriptions.length > 0 ? (
-            <ul className="divide-y divide-gray-200">
-              {filteredPrescriptions.map((prescription) => {
-                const isExpired = isPrescriptionExpired(prescription);
-                
-                return (
-                  <li key={prescription._id} className="px-6 py-5 hover:bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className={`p-2 rounded-full ${
-                            prescription.status === 'completed' ? 'bg-green-100' : 
-                            prescription.status === 'cancelled' ? 'bg-red-100' : 
-                            isExpired ? 'bg-yellow-100' : 
-                            'bg-purple-100'
-                          }`}>
-                            <FaPrescription className={`h-6 w-6 ${
-                              prescription.status === 'completed' ? 'text-green-600' : 
-                              prescription.status === 'cancelled' ? 'text-red-600' : 
-                              isExpired ? 'text-yellow-600' : 
-                              'text-purple-600'
-                            }`} />
-                          </div>
+        {filteredPrescriptions.length > 0 ? (
+          <div className="space-y-4">
+            {filteredPrescriptions.map((prescription) => {
+              const isExpired = isPrescriptionExpired(prescription);
+              const statusInfo = getStatusInfo(prescription);
+              const StatusIcon = statusInfo.icon;
+              
+              return (
+                <div key={prescription._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4 flex-1">
+                        {/* Icon */}
+                        <div className={`p-3 rounded-xl ${statusInfo.iconBg}`}>
+                          <FaPrescription className={`h-8 w-8 ${statusInfo.iconColor}`} />
                         </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Prescription for {prescription.patient.user.name}
-                          </h3>
-                          <div className="mt-1 flex items-center text-sm text-gray-500">
-                            <FaCalendarAlt className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            <span>Created: {new Date(prescription.createdAt).toLocaleDateString()}</span>
-                            <span className="mx-2">•</span>
-                            <span>
-                              {isExpired 
-                                ? 'Expired on: ' 
-                                : 'Expires on: '
-                              }
-                              {new Date(prescription.expiryDate).toLocaleDateString()}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              prescription.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                              prescription.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                              isExpired ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {isExpired ? 'Expired' : prescription.status.charAt(0).toUpperCase() + prescription.status.slice(1)}
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xl font-semibold text-gray-900">
+                              Prescription for {prescription.patient.user.name}
+                            </h3>
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.color} border ${statusInfo.border}`}>
+                              <StatusIcon className="mr-1.5 h-3 w-3" />
+                              {statusInfo.text}
                             </span>
                           </div>
+                          
+                          {/* Meta Information */}
+                          <div className="flex items-center flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                            <span className="flex items-center">
+                              <FaCalendarAlt className="mr-1.5 h-4 w-4" />
+                              Created: {new Date(prescription.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            <span className="flex items-center">
+                              <FaClock className="mr-1.5 h-4 w-4" />
+                              {isExpired ? 'Expired on: ' : 'Valid until: '}
+                              {new Date(prescription.expiryDate).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          
+                          {/* Medications Grid */}
+                          <div className="mb-4">
+                            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                              <FaPills className="mr-2 h-4 w-4" />
+                              Prescribed Medications
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {prescription.medications.map((medication, idx) => (
+                                                                <div key={idx} className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                                  <div className="flex items-start">
+                                    <FaPills className="h-5 w-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <p className="font-semibold text-gray-900">{medication.name}</p>
+                                      <p className="text-xs text-gray-600 mt-1">
+                                        <span className="font-medium">Dosage:</span> {medication.dosage}
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        <span className="font-medium">Frequency:</span> {medication.frequency}
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        <span className="font-medium">Duration:</span> {medication.duration}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Instructions */}
+                          {prescription.instructions && (
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                              <h5 className="text-sm font-medium text-amber-800 mb-1 flex items-center">
+                                <FaNotesMedical className="mr-2 h-4 w-4" />
+                                Special Instructions
+                              </h5>
+                              <p className="text-sm text-amber-700">{prescription.instructions}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div>
-                        <Link
-                          to={`/doctor/prescriptions/${prescription._id}`}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 mr-2"
-                        >
-                          <FaEye className="mr-1 h-4 w-4" />
-                          View
-                        </Link>
-                        {prescription.status === 'active' && !isExpired && (
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="mt-6 flex flex-wrap gap-2 justify-end">
+                      <Link
+                        to={`/doctor/prescriptions/${prescription._id}`}
+                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                      >
+                        <FaEye className="mr-2 h-4 w-4" />
+                        View Details
+                      </Link>
+                      {prescription.status === 'active' && !isExpired && (
+                        <>
                           <button
                             onClick={() => handleUpdateStatus(prescription._id, 'completed')}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200"
+                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200"
                           >
+                            <FaCheckCircle className="mr-2 h-4 w-4" />
                             Mark Completed
                           </button>
-                        )}
-                        {(prescription.status === 'active' || prescription.status === 'completed') && !isExpired && (
                           <button
                             onClick={() => handleUpdateStatus(prescription._id, 'cancelled')}
-                            className="inline-flex items-center px-3 py-1 ml-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-4 py-2 bg-white border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-50 hover:border-red-400 shadow-sm hover:shadow-md transition-all duration-200"
                           >
+                            <FaTimesCircle className="mr-2 h-4 w-4" />
                             Cancel
                           </button>
-                        )}
-                      </div>
+                        </>
+                      )}
                     </div>
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700">Medications:</h4>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {prescription.medications.map((medication, idx) => (
-                          <div key={idx} className="bg-gray-50 px-3 py-2 rounded-lg">
-                            <p className="text-sm font-medium text-gray-900">{medication.name}</p>
-                            <p className="text-xs text-gray-600">{medication.dosage}, {medication.frequency}, {medication.duration}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {prescription.instructions && (
-                      <div className="mt-3">
-                        <h4 className="text-sm font-medium text-gray-700">Instructions:</h4>
-                        <p className="text-sm text-gray-600">{prescription.instructions}</p>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <div className="px-6 py-12 text-center">
-              <FaPrescription className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900">No prescriptions found</h3>
-              <p className="mt-1 text-sm text-gray-500">
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-8 py-16 text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
+                <FaPrescription className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No prescriptions found</h3>
+              <p className="text-gray-500 max-w-md mx-auto mb-6">
                 {searchTerm || selectedPatient || statusFilter !== 'all'
                   ? 'Try adjusting your search filters'
                   : 'Create a new prescription for your patients'}
               </p>
               {(!searchTerm && !selectedPatient && statusFilter === 'all') && (
-                <div className="mt-6">
-                  <Link
-                    to="/doctor/prescriptions/create"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                  >
-                    <FaPlus className="mr-2 -ml-1 h-4 w-4" />
-                    Create New Prescription
-                  </Link>
-                </div>
+                <Link
+                  to="/doctor/prescriptions/create"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                >
+                  <FaPlus className="mr-2 h-5 w-5" />
+                  Create New Prescription
+                </Link>
+              )}
+              {(searchTerm || selectedPatient || statusFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedPatient('');
+                    setStatusFilter('all');
+                  }}
+                  className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-200 transition-colors duration-200"
+                >
+                  Clear Filters
+                </button>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

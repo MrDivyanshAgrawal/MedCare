@@ -9,7 +9,11 @@ import {
   FaTimesCircle, 
   FaSearch, 
   FaFilter,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaDownload,
+  FaEye,
+  FaRupeeSign,
+  FaClock
 } from 'react-icons/fa';
 
 // Import Stripe components
@@ -17,10 +21,10 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 // Initialize Stripe with your public key
-const stripePromise = loadStripe('your_stripe_public_key');
+const stripePromise = loadStripe('pk_test_51S6acTELX7EgUQu06vmtEDFSrXxDIoqNu5efNymlGIvPSz8JisMVU1euo947lABJNNsjAK908mz9ZAFarjDTZThN00IV9Ew8WN');
 
 // Payment Form Component
-const PaymentForm = ({ invoice, onPaymentSuccess }) => {
+const PaymentForm = ({ invoice, onPaymentSuccess, onClose }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -57,6 +61,7 @@ const PaymentForm = ({ invoice, onPaymentSuccess }) => {
       if (response.data.success) {
         toast.success('Payment processed successfully!');
         onPaymentSuccess(invoice._id);
+        onClose();
       } else {
         setError('Payment failed. Please try again.');
       }
@@ -69,42 +74,58 @@ const PaymentForm = ({ invoice, onPaymentSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-      <div className="border border-gray-300 rounded-md p-4">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
+    <div className="space-y-6">
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Complete Your Payment</h3>
+        <p className="text-gray-600 mt-1">Total Amount: ₹{invoice.total.toFixed(2)}</p>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#424770',
+                  '::placeholder': {
+                    color: '#aab7c4',
+                  },
+                },
+                invalid: {
+                  color: '#9e2146',
                 },
               },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-          }}
-        />
-      </div>
-      
-      {error && (
-        <div className="text-sm text-red-600">{error}</div>
-      )}
-      
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={!stripe || processing}
-          className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none ${
-            (!stripe || processing) ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {processing ? 'Processing...' : `Pay $${invoice.total.toFixed(2)}`}
-        </button>
-      </div>
-    </form>
+            }}
+          />
+        </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        
+        <div className="flex gap-3 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!stripe || processing}
+            className={`px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 ${
+              (!stripe || processing) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {processing ? 'Processing...' : `Pay ₹${invoice.total.toFixed(2)}`}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
@@ -159,15 +180,34 @@ const Billing = () => {
   );
 
   const getStatusBadge = (status) => {
-    const statusClasses = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      overdue: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-100 text-gray-800'
+    const statusConfig = {
+      pending: { 
+        bg: 'bg-yellow-100', 
+        text: 'text-yellow-800', 
+        icon: <FaClock className="mr-1 h-3 w-3" /> 
+      },
+      paid: { 
+        bg: 'bg-green-100', 
+        text: 'text-green-800', 
+        icon: <FaCheckCircle className="mr-1 h-3 w-3" /> 
+      },
+      overdue: { 
+        bg: 'bg-red-100', 
+        text: 'text-red-800', 
+        icon: <FaTimesCircle className="mr-1 h-3 w-3" /> 
+      },
+      cancelled: { 
+        bg: 'bg-gray-100', 
+        text: 'text-gray-800', 
+        icon: <FaTimesCircle className="mr-1 h-3 w-3" /> 
+      }
     };
     
+    const config = statusConfig[status] || statusConfig.pending;
+    
     return (
-      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-3 py-1 inline-flex items-center text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
+        {config.icon}
         {status === 'paid' ? 'Paid' : 
          status === 'pending' ? 'Pending' : 
          status === 'overdue' ? 'Overdue' : 'Cancelled'}
@@ -179,11 +219,16 @@ const Billing = () => {
     return invoice.paymentStatus === 'pending' && new Date(invoice.dueDate) < new Date();
   };
 
+  // Calculate totals
+  const totalPending = invoices.filter(i => i.paymentStatus === 'pending').reduce((sum, i) => sum + i.total, 0);
+  const totalPaid = invoices.filter(i => i.paymentStatus === 'paid').reduce((sum, i) => sum + i.total, 0);
+  const totalOverdue = invoices.filter(i => isInvoiceOverdue(i)).reduce((sum, i) => sum + i.total, 0);
+
   if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-yellow-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -192,21 +237,22 @@ const Billing = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-yellow-500 to-yellow-700 text-white">
-            <h1 className="text-2xl font-bold">Billing & Invoices</h1>
-            <p className="mt-1 text-yellow-100">
-              View and pay your medical bills
+        {/* Header */}
+        <div className="bg-gradient-to-r from-yellow-500 to-orange-600 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12">
+            <h1 className="text-3xl font-bold text-white mb-2">Billing & Invoices</h1>
+            <p className="text-yellow-100 text-lg">
+              Manage your medical bills and payment history
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
@@ -216,18 +262,73 @@ const Billing = () => {
           </div>
         )}
 
+        {/* Billing summary cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Paid</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
+                  <FaRupeeSign className="h-5 w-5" />
+                  {totalPaid.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-green-100 rounded-full p-3">
+                <FaCheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {invoices.filter(i => i.paymentStatus === 'paid').length} invoices
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-yellow-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Payment</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
+                  <FaRupeeSign className="h-5 w-5" />
+                  {totalPending.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-yellow-100 rounded-full p-3">
+                <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {invoices.filter(i => i.paymentStatus === 'pending' && !isInvoiceOverdue(i)).length} invoices
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-red-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Overdue Amount</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
+                  <FaRupeeSign className="h-5 w-5" />
+                  {totalOverdue.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-red-100 rounded-full p-3">
+                <FaTimesCircle className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {invoices.filter(i => isInvoiceOverdue(i)).length} invoices
+            </p>
+          </div>
+        </div>
+
         {/* Filters and search */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-xl shadow-md p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="col-span-2">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className="h-5 w-5 text-gray-400" />
-                </div>
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
                   placeholder="Search by invoice number or notes"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -235,11 +336,9 @@ const Billing = () => {
             </div>
             <div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaFilter className="h-5 w-5 text-gray-400" />
-                </div>
+                <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <select
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 appearance-none"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -253,97 +352,59 @@ const Billing = () => {
           </div>
         </div>
 
-        {/* Billing summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 mr-4">
-                <FaCheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Paid Invoices</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {invoices.filter(i => i.paymentStatus === 'paid').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 mr-4">
-                <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {invoices.filter(i => i.paymentStatus === 'pending' && !isInvoiceOverdue(i)).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-red-100 mr-4">
-                <FaTimesCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Overdue Invoices</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {invoices.filter(i => isInvoiceOverdue(i)).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Invoices list */}
         {sortedInvoices.length > 0 ? (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {sortedInvoices.map((invoice) => (
-                <li key={invoice._id}>
-                  <div className="px-4 py-5 sm:px-6 hover:bg-gray-50">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className={`p-2 rounded-full ${
-                            invoice.paymentStatus === 'paid' ? 'bg-green-100' : 
-                            isInvoiceOverdue(invoice) ? 'bg-red-100' : 
-                            'bg-yellow-100'
-                          }`}>
-                            <FaFileInvoiceDollar className={`h-6 w-6 ${
-                              invoice.paymentStatus === 'paid' ? 'text-green-600' : 
-                              isInvoiceOverdue(invoice) ? 'text-red-600' : 
-                              'text-yellow-600'
-                            }`} />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Invoice #{invoice.invoiceNumber}
-                          </h3>
-                          <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
-                            <FaCalendarAlt className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            <span>Due: {new Date(invoice.dueDate).toLocaleDateString()}</span>
-                            <span className="mx-2">•</span>
-                            <span>
-                              Total: ${invoice.total.toFixed(2)}
-                            </span>
-                            <span className="mx-2">•</span>
-                            {getStatusBadge(
-                              isInvoiceOverdue(invoice) ? 'overdue' : invoice.paymentStatus
-                            )}
-                          </div>
-                        </div>
+          <div className="space-y-4">
+            {sortedInvoices.map((invoice) => (
+              <div 
+                key={invoice._id}
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className={`p-3 rounded-full ${
+                        invoice.paymentStatus === 'paid' ? 'bg-green-100' : 
+                        isInvoiceOverdue(invoice) ? 'bg-red-100' : 
+                        'bg-yellow-100'
+                      }`}>
+                        <FaFileInvoiceDollar className={`h-6 w-6 ${
+                          invoice.paymentStatus === 'paid' ? 'text-green-600' : 
+                          isInvoiceOverdue(invoice) ? 'text-red-600' : 
+                          'text-yellow-600'
+                        }`} />
                       </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Invoice #{invoice.invoiceNumber}
+                        </h3>
+                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <FaCalendarAlt className="mr-2 h-4 w-4 text-gray-400" />
+                            <span>Due: {new Date(invoice.dueDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-900 font-semibold">
+                            <FaRupeeSign className="mr-1 h-4 w-4" />
+                            <span>{invoice.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        
+                        {invoice.notes && (
+                          <p className="mt-2 text-sm text-gray-600">
+                            {invoice.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 lg:mt-0 flex items-center space-x-3">
+                      {getStatusBadge(isInvoiceOverdue(invoice) ? 'overdue' : invoice.paymentStatus)}
                       
-                      <div className="mt-4 md:mt-0">
+                      <div className="flex space-x-2">
                         {invoice.paymentStatus === 'pending' && (
                           <button
                             onClick={() => setPayingInvoiceId(invoice._id)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200"
                           >
                             <FaRegCreditCard className="mr-2 h-4 w-4" />
                             Pay Now
@@ -352,104 +413,78 @@ const Billing = () => {
                         
                         <button
                           onClick={() => window.open(`/api/billing/${invoice._id}/download`, '_blank')}
-                          className="inline-flex items-center ml-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                         >
-                          View Details
+                          <FaEye className="mr-2 h-4 w-4" />
+                          View
+                        </button>
+                        
+                        <button
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          <FaDownload className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
-                    
-                    {invoice.items.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium text-gray-700">Items:</h4>
-                        <div className="mt-2 overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  </div>
+                  
+                  {/* Show item breakdown for expanded view */}
+                  {invoice.items && invoice.items.length > 0 && (
+                    <div className="mt-6 border-t pt-4">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead>
+                            <tr>
+                              <th className="text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                              <th className="text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                              <th className="text-right text-xs font-medium text-gray-500 uppercase">Rate</th>
+                              <th className="text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {invoice.items.map((item, idx) => (
+                              <tr key={idx}>
+                                <td className="py-2 text-sm text-gray-900">{item.description}</td>
+                                <td className="py-2 text-sm text-right text-gray-600">{item.quantity}</td>
+                                <td className="py-2 text-sm text-right text-gray-600">₹{item.unitPrice.toFixed(2)}</td>
+                                <td className="py-2 text-sm text-right font-medium text-gray-900">₹{item.amount.toFixed(2)}</td>
                               </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {invoice.items.map((item, idx) => (
-                                <tr key={idx}>
-                                  <td className="px-6 py-2 text-sm text-gray-900">{item.description}</td>
-                                  <td className="px-6 py-2 text-sm text-right text-gray-500">{item.quantity}</td>
-                                  <td className="px-6 py-2 text-sm text-right text-gray-500">${item.unitPrice.toFixed(2)}</td>
-                                  <td className="px-6 py-2 text-sm text-right text-gray-900">${item.amount.toFixed(2)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                            <tfoot className="bg-gray-50">
-                              <tr>
-                                <td colSpan="3" className="px-6 py-2 text-sm text-right font-medium text-gray-700">Subtotal:</td>
-                                <td className="px-6 py-2 text-sm text-right text-gray-900">${invoice.subtotal.toFixed(2)}</td>
-                              </tr>
-                              {invoice.tax > 0 && (
-                                <tr>
-                                  <td colSpan="3" className="px-6 py-2 text-sm text-right font-medium text-gray-700">Tax:</td>
-                                  <td className="px-6 py-2 text-sm text-right text-gray-900">${invoice.tax.toFixed(2)}</td>
-                                </tr>
-                              )}
-                              {invoice.discount > 0 && (
-                                <tr>
-                                  <td colSpan="3" className="px-6 py-2 text-sm text-right font-medium text-gray-700">Discount:</td>
-                                  <td className="px-6 py-2 text-sm text-right text-green-600">-${invoice.discount.toFixed(2)}</td>
-                                </tr>
-                              )}
-                              <tr>
-                                <td colSpan="3" className="px-6 py-2 text-sm text-right font-bold text-gray-700">Total:</td>
-                                <td className="px-6 py-2 text-sm text-right font-bold text-gray-900">${invoice.total.toFixed(2)}</td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
-                    
-                    {/* Payment form */}
-                    {payingInvoiceId === invoice._id && (
-                      <div className="mt-6 p-4 border border-gray-200 rounded-md bg-gray-50">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-medium text-gray-900">Payment Information</h3>
-                          <button 
-                            onClick={() => setPayingInvoiceId(null)}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <span className="sr-only">Close</span>
-                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
+                    </div>
+                  )}
+                  
+                  {/* Payment form modal */}
+                  {payingInvoiceId === invoice._id && (
+                    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4">
+                      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                         <Elements stripe={stripePromise}>
                           <PaymentForm 
                             invoice={invoice} 
-                            onPaymentSuccess={handlePaymentSuccess} 
+                            onPaymentSuccess={handlePaymentSuccess}
+                            onClose={() => setPayingInvoiceId(null)}
                           />
                         </Elements>
                       </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <div className="px-4 py-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-900">No invoices found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {statusFilter !== 'all' 
-                  ? `No invoices with status "${statusFilter}" found.` 
-                  : 'You don\'t have any invoices yet.'}
-              </p>
+          <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <div className="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <FaFileInvoiceDollar className="h-12 w-12 text-gray-400" />
             </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No invoices found</h3>
+            <p className="text-gray-600">
+              {statusFilter !== 'all' 
+                ? `No invoices with status "${statusFilter}" found.` 
+                : 'You don\'t have any invoices yet.'}
+            </p>
           </div>
         )}
       </div>

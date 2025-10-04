@@ -1,4 +1,3 @@
-// src/pages/doctor/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -6,13 +5,24 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { 
   FaUserInjured, 
-  FaCalendarCheck, 
-  FaFileMedical, 
+  FaUserMd, 
+  FaCalendarAlt, 
+  FaFileInvoiceDollar, 
   FaChartLine, 
-  FaCalendarAlt,
-  FaClock, 
-  FaArrowRight 
+  FaUserShield, 
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+  FaArrowUp,
+  FaArrowDown,
+  FaArrowRight,
+  FaHospital,
+  FaStethoscope,
+  FaHeartbeat,
+  FaUsersCog
 } from 'react-icons/fa';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -23,7 +33,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await api.get('/dashboard/doctor');
+        const response = await api.get('/dashboard/admin');
         setDashboardData(response.data);
         setLoading(false);
       } catch (err) {
@@ -40,7 +50,7 @@ const Dashboard = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -50,23 +60,33 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Welcome banner */}
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="px-6 py-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-            <h1 className="text-2xl font-bold">Welcome, Dr. {currentUser.name}!</h1>
-            <p className="mt-1 text-blue-100">
-              Here's an overview of your appointments and patients
-            </p>
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-8 py-12 flex flex-col md:flex-row justify-between items-center">
+            <div className="text-white mb-6 md:mb-0">
+              <h1 className="text-3xl font-bold mb-2">Welcome back, {currentUser.name}!</h1>
+              <p className="text-purple-100 text-lg">
+                Here's an overview of your hospital management system
+              </p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-white">
+              <div className="flex items-center space-x-3">
+                <FaHospital className="h-12 w-12" />
+                <div>
+                  <p className="text-sm text-purple-100">System Status</p>
+                  <p className="text-2xl font-bold flex items-center">
+                    <span className="h-3 w-3 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                    Active
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fadeIn">
             <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9v4a1 1 0 11-2 0v-4a1 1 0 112 0zm0-4a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -74,156 +94,359 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Stats overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100 mr-4">
-                <FaCalendarAlt className="h-6 w-6 text-blue-600" />
-              </div>
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-indigo-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Appointments</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.appointments?.total || 0}</p>
+                <p className="text-gray-600 text-sm">Total Patients</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData?.counts?.patients || 0}
+                </p>
+                <p className="text-xs text-green-600 mt-1 flex items-center">
+                  <FaArrowUp className="mr-1" />
+                  12% from last month
+                </p>
+              </div>
+              <div className="bg-indigo-100 rounded-full p-3">
+                <FaUserInjured className="h-6 w-6 text-indigo-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 mr-4">
-                <FaCalendarCheck className="h-6 w-6 text-green-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.appointments?.completed || 0}</p>
+                <p className="text-gray-600 text-sm">Total Doctors</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData?.counts?.doctors || 0}
+                </p>
+                <p className="text-xs text-green-600 mt-1 flex items-center">
+                  <FaArrowUp className="mr-1" />
+                  8% from last month
+                </p>
+              </div>
+              <div className="bg-blue-100 rounded-full p-3">
+                <FaUserMd className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-100 mr-4">
-                <FaUserInjured className="h-6 w-6 text-purple-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-green-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.patients || 0}</p>
+                <p className="text-gray-600 text-sm">Appointments Today</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData?.appointments?.today || 0}
+                </p>
+                <p className="text-xs text-red-600 mt-1 flex items-center">
+                  <FaArrowDown className="mr-1" />
+                  3% from yesterday
+                </p>
+              </div>
+              <div className="bg-green-100 rounded-full p-3">
+                <FaCalendarAlt className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 mr-4">
-                <FaFileMedical className="h-6 w-6 text-yellow-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-yellow-500">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Medical Records</p>
-                <p className="text-2xl font-bold text-gray-900">{dashboardData?.medicalRecords || 0}</p>
+                <p className="text-gray-600 text-sm">Monthly Revenue</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  ${dashboardData?.revenue?.total?.toFixed(2) || '0.00'}
+                </p>
+                <p className="text-xs text-green-600 mt-1 flex items-center">
+                  <FaArrowUp className="mr-1" />
+                  18% from last month
+                </p>
+              </div>
+              <div className="bg-yellow-100 rounded-full p-3">
+                <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Today's appointments */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Today's Appointments</h2>
-            <Link to="/doctor/appointments" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              View all
-            </Link>
+        {/* Doctor Approvals Alert */}
+        {dashboardData?.counts?.pendingDoctorApprovals > 0 && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg animate-fadeIn">
+            <div className="flex items-center justify-between">
+              <div className="flex">
+                <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700 font-medium">
+                    Pending Doctor Approvals
+                  </p>
+                  <p className="text-sm text-yellow-600 mt-1">
+                    You have {dashboardData.counts.pendingDoctorApprovals} doctor{dashboardData.counts.pendingDoctorApprovals > 1 ? 's' : ''} awaiting approval.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin/doctors?filter=pending"
+                className="ml-4 inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Review Applications
+                <FaArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Link
+            to="/admin/appointments"
+            className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200 p-6 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 group"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 bg-indigo-600 rounded-full group-hover:scale-110 transition-transform duration-200">
+                <FaCalendarAlt className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="mt-4 font-semibold text-gray-900">Appointments</h3>
+              <p className="mt-2 text-sm text-gray-600">Manage schedules</p>
+              <FaArrowRight className="mt-3 h-4 w-4 text-indigo-600 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/doctors"
+            className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 p-6 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 group"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 bg-blue-600 rounded-full group-hover:scale-110 transition-transform duration-200">
+                <FaUserMd className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="mt-4 font-semibold text-gray-900">Doctors</h3>
+              <p className="mt-2 text-sm text-gray-600">Manage staff</p>
+              <FaArrowRight className="mt-3 h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/patients"
+            className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 p-6 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 group"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 bg-green-600 rounded-full group-hover:scale-110 transition-transform duration-200">
+                <FaUserInjured className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="mt-4 font-semibold text-gray-900">Patients</h3>
+              <p className="mt-2 text-sm text-gray-600">Patient records</p>
+              <FaArrowRight className="mt-3 h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/reports"
+            className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 p-6 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 group"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 bg-purple-600 rounded-full group-hover:scale-110 transition-transform duration-200">
+                <FaChartLine className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="mt-4 font-semibold text-gray-900">Reports</h3>
+              <p className="mt-2 text-sm text-gray-600">Analytics & insights</p>
+              <FaArrowRight className="mt-3 h-4 w-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </div>
+
+        {/* Revenue Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                <FaChartLine className="mr-2 h-5 w-5 text-purple-600" />
+                Revenue Overview
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Monthly revenue trend</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <div className="h-3 w-3 bg-blue-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-600">Total</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-600">Collected</span>
+              </div>
+            </div>
           </div>
           
-          <div className="divide-y divide-gray-200">
-            {dashboardData?.appointments?.today?.length > 0 ? (
-              dashboardData.appointments.today.map((appointment) => (
-                <div key={appointment._id} className="px-6 py-4 flex items-center">
-                  <div className="flex-shrink-0">
-                    <img 
-                      className="h-12 w-12 rounded-full" 
-                      src={appointment.patient.user.profilePicture || "https://via.placeholder.com/48"} 
-                      alt={appointment.patient.user.name} 
-                    />
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={[
+                  {
+                    name: 'Jan',
+                    total: 4000,
+                    collected: 2400,
+                  },
+                  {
+                    name: 'Feb',
+                    total: 3000,
+                    collected: 1398,
+                  },
+                  {
+                    name: 'Mar',
+                    total: 2000,
+                    collected: 1800,
+                  },
+                  {
+                    name: 'Apr',
+                    total: 2780,
+                    collected: 2508,
+                  },
+                  {
+                    name: 'May',
+                    total: 1890,
+                    collected: 1800,
+                  },
+                  {
+                    name: 'Jun',
+                    total: 2390,
+                    collected: 2300,
+                  },
+                  {
+                    name: 'Jul',
+                    total: 3490,
+                    collected: 3000,
+                  },
+                ]}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip formatter={(value) => `$${value}`} />
+                <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', r: 6 }} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="collected" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Recent Registrations and Appointments */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Users */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <FaUsersCog className="mr-2 h-5 w-5 text-indigo-600" />
+                Recent Registrations
+              </h2>
+              <Link to="/admin/users" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center transition-colors duration-200">
+                View all
+                <FaArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+            <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+              {dashboardData?.recentUsers?.length > 0 ? (
+                dashboardData.recentUsers.map((user) => (
+                  <div key={user._id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0">
+                        <img 
+                          className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md" 
+                          src={user.profilePicture || `https://ui-avatars.com/api/?name=${user.name}&background=6366f1&color=fff`} 
+                          alt={user.name} 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900">{user.name}</h3>
+                        <div className="mt-1 flex items-center space-x-3 text-sm text-gray-500">
+                          <span>{user.email}</span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'doctor' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-400 flex items-center">
+                          <FaClock className="mr-1 h-3 w-3" />
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="ml-4 flex-1">
+                ))
+              ) : (
+                <div className="px-6 py-12 text-center">
+                  <FaUserShield className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-3 text-sm font-medium text-gray-900">No recent registrations</h3>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Appointments */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <FaHeartbeat className="mr-2 h-5 w-5 text-green-600" />
+                Recent Appointments
+              </h2>
+              <Link to="/admin/appointments" className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center transition-colors duration-200">
+                View all
+                <FaArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+            <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+              {dashboardData?.recentAppointments?.length > 0 ? (
+                dashboardData.recentAppointments.map((appointment) => (
+                  <div key={appointment._id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-gray-900">{appointment.patient.user.name}</h3>
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {appointment.timeSlot}
+                      <div className="flex items-center space-x-4">
+                        <div className={`flex-shrink-0 p-2 rounded-full ${
+                          appointment.status === 'completed' ? 'bg-green-100' : 
+                          appointment.status === 'cancelled' ? 'bg-red-100' : 
+                          'bg-blue-100'
+                        }`}>
+                          {appointment.status === 'completed' ? (
+                            <FaCheckCircle className="h-6 w-6 text-green-600" />
+                          ) : appointment.status === 'cancelled' ? (
+                            <FaTimesCircle className="h-6 w-6 text-red-600" />
+                          ) : (
+                            <FaCalendarAlt className="h-6 w-6 text-blue-600" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {appointment.patient.user.name} with Dr. {appointment.doctor.user.name}
+                          </h3>
+                          <p className="text-sm text-gray-500 flex items-center mt-1">
+                            <FaClock className="mr-1 h-3 w-3" />
+                            {new Date(appointment.date).toLocaleDateString()} at {appointment.timeSlot}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        appointment.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                        appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {appointment.status}
                       </span>
                     </div>
-                    <div className="mt-1 text-sm text-gray-500 flex items-center">
-                      <FaClock className="mr-1 h-3 w-3 text-gray-400" />
-                      <span className="truncate">{appointment.reasonForVisit}</span>
-                    </div>
                   </div>
-                  <div className="ml-4">
-                    <Link
-                      to={`/doctor/appointments/${appointment._id}`}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
-                    >
-                      Details <FaArrowRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </div>
+                ))
+              ) : (
+                <div className="px-6 py-12 text-center">
+                  <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-3 text-sm font-medium text-gray-900">No recent appointments</h3>
                 </div>
-              ))
-            ) : (
-              <div className="px-6 py-10 text-center">
-                <FaCalendarAlt className="mx-auto h-10 w-10 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No appointments today</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  You don't have any appointments scheduled for today.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent patients */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Recent Patients</h2>
-            <Link to="/doctor/patients" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              View all
-            </Link>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {dashboardData?.recentPatients?.length > 0 ? (
-              dashboardData.recentPatients.map((patient) => (
-                <div key={patient._id} className="px-6 py-4 flex items-center">
-                  <div className="flex-shrink-0">
-                    <img 
-                      className="h-12 w-12 rounded-full" 
-                      src={patient.user.profilePicture || "https://via.placeholder.com/48"} 
-                      alt={patient.user.name} 
-                    />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">{patient.user.name}</h3>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <FaEnvelope className="mr-1 h-3 w-3 text-gray-400" />
-                      <span>{patient.user.email}</span>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <Link
-                      to={`/doctor/patients/${patient._id}`}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
-                    >
-                      View <FaArrowRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="px-6 py-10 text-center">
-                <FaUserInjured className="mx-auto h-10 w-10 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No patients yet</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  You haven't seen any patients yet.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

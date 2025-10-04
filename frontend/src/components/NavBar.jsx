@@ -43,27 +43,29 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-              Home
-            </Link>
-            <Link to="/doctors" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-              Doctors
-            </Link>
-            <Link to="/services" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-              Services
-            </Link>
-            <Link to="/about" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-              About
-            </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-              Contact
-            </Link>
+          <div className="hidden md:flex md:items-center">
+            <div className="flex items-center space-x-1">
+              <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                Home
+              </Link>
+              <Link to="/doctors" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                Doctors
+              </Link>
+              <Link to="/services" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                Services
+              </Link>
+              <Link to="/about" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                About
+              </Link>
+              <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                Contact
+              </Link>
 
-            {currentUser ? (
-              <div className="relative ml-3">
-                <div className="flex items-center">
-                  <Link to={getDashboardLink()} className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+              {currentUser ? (
+                <>
+                  <div className="h-6 w-px bg-gray-300 mx-2"></div>
+                  <Link to={getDashboardLink()} className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                    <FaUserCircle className="mr-2" />
                     Dashboard
                   </Link>
                   <button
@@ -73,18 +75,19 @@ const Navbar = () => {
                     <FaSignOutAlt className="mr-2" />
                     Logout
                   </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/login" className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                  Login
-                </Link>
-                <Link to="/register" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Register
-                </Link>
-              </div>
-            )}
+                </>
+              ) : (
+                <>
+                  <div className="h-6 w-px bg-gray-300 mx-2"></div>
+                  <Link to="/login" className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm">
+                    Login
+                  </Link>
+                  <Link to="/register" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -145,11 +148,13 @@ const Navbar = () => {
 
             {currentUser ? (
               <>
+                <div className="border-t border-gray-200 my-2"></div>
                 <Link 
                   to={getDashboardLink()}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100"
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  <FaUserCircle className="inline mr-2" />
                   Dashboard
                 </Link>
                 <button
@@ -167,14 +172,14 @@ const Navbar = () => {
               <div className="space-y-2 pt-4 pb-3 border-t border-gray-200">
                 <Link 
                   to="/login" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 border border-gray-300 hover:bg-gray-100"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login
                 </Link>
                 <Link 
                   to="/register" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-gray-100"
+                  className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Register
