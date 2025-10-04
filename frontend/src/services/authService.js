@@ -1,4 +1,4 @@
-import * as jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import api from './api';
 
 export const register = async (userData) => {
@@ -36,7 +36,7 @@ export const isTokenValid = () => {
   if (!token) return false;
   
   try {
-    const decoded = jwtDecode.decode(token);
+    const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000;
     
     if (decoded.exp < currentTime) {
