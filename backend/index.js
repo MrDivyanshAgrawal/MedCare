@@ -48,9 +48,9 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Simple test route
-app.get('/', (req, res) => {
-    res.send('Hospital Management API is running');
-});
+// app.get('/', (req, res) => {
+//     res.send('Hospital Management API is running');
+// });
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
