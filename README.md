@@ -365,8 +365,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-** ⭐ Star this repository if you found it helpful! **
+**⭐ Star this repository if you found it helpful!**
 
-** 🚀 [Live Demo](https://medcare-fwo8.onrender.com) | 📚 [Documentation](#) | 🐛 [Report Bug](https://github.com/MrDivyanshAgrawal/MedCare/issues) **
+**🚀 [Live Demo](https://medcare-fwo8.onrender.com) | 📚 [Documentation](#) | 🐛 [Report Bug](https://github.com/MrDivyanshAgrawal/MedCare/issues)**
 
-** Built with ❤️ using the MERN Stack **
+*Built with ❤️ using the MERN Stack*
